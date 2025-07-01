@@ -1,0 +1,7 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+data/04_cytometry_exports/fcs_files
+*.fastq.gz
+data/06_phylogeney_exports/fasttree.log
