@@ -112,7 +112,7 @@ tax_for_icamp <- tax_table_raw[,2:7]
 
 # Set the working directory for our phylogenetic dist matrix
 
-icamp_wd_env2 <- "data/12_ecological_drivers/pd_wd_env2/"
+icamp_wd_env <- "data/12_ecological_drivers/pd_wd_env/"
 
 # Make sure our Comp-Group_Hier groups match our OTU table
 pools_env <- pool_groups_env$Comp_Group_Hier[match(row.names(asv_mat_env), pool_groups_env$Rep_ID)] %>%
@@ -129,11 +129,11 @@ row.names(pools_env) <- row.names(asv_mat_env)
 This is an important step where we create a distance matrix which tracks the phylogenetic distance between each ASV.
 ```{r calculate-phylogenetic-dist-matrix, eval = FALSE}
 
-pd.big2=iCAMP::pdist.big(tree = tree_env, 
-                        wd=icamp_wd_env2, 
+pd.big=iCAMP::pdist.big(tree = tree_env, 
+                        wd=icamp_wd_env, 
                         nworker = 50)
 
-save(pd.big2, file = "data/12_ecological_drivers/pd.big2.RData")
+save(pd.big, file = "data/12_ecological_drivers/pd.big.RData")
 
 ```
 
@@ -150,7 +150,7 @@ niche.dif<-iCAMP::dniche(env = env,
                         nworker = 30,
                         out.dist=FALSE,
                         bigmemo=TRUE,
-                        nd.wd="data/12_ecological_drivers/output_env2")
+                        nd.wd="data/12_ecological_drivers/output_env")
 
 save(niche.dif, file = "data/12_ecological_drivers/niche.dif.RData")
 
@@ -169,7 +169,7 @@ We also test using both the RowSums and the RowMeans to aggregate the data acros
 
 ```{r finding-best-binning, eval = FALSE}
 
-load("data/12_ecological_drivers/pd.big2.RData")
+load("data/12_ecological_drivers/pd.big.RData")
 load("data/12_ecological_drivers/niche.dif.RData")
 
 dss <- c(0.1, 0.2, 0.3, 0.4, 0.5)
@@ -177,17 +177,17 @@ bin.size.limits <- c(12, 24, 36, 48, 60)
 
 combos <- expand_grid(dss, bin.size.limits)
 phylobin=taxa.binphy.big(tree = tree_env, 
-                         pd.desc = pd.big2$pd.file,
-                         pd.spname = pd.big2$tip.label,
-                         pd.wd = pd.big2$pd.wd, 
+                         pd.desc = pd.big$pd.file,
+                         pd.spname = pd.big$tip.label,
+                         pd.wd = pd.big$pd.wd, 
                          ds = .1, 
                          bin.size.limit = 12,
                          nworker = 30)
 test_binning <- function(ds, bin.size.limit){
     phylobin=taxa.binphy.big(tree = tree_env, 
-                         pd.desc = pd.big2$pd.file,
-                         pd.spname = pd.big2$tip.label,
-                         pd.wd = pd.big2$pd.wd, 
+                         pd.desc = pd.big$pd.file,
+                         pd.spname = pd.big$tip.label,
+                         pd.wd = pd.big$pd.wd, 
                          ds = ds, 
                          bin.size.limit = bin.size.limit,
                          nworker = 30)
@@ -198,9 +198,9 @@ test_binning <- function(ds, bin.size.limit){
     
     binps=ps.bin(sp.bin = sp.bin,
                     sp.ra = sp.ra,
-                    pd.desc = pd.big2$pd.file, 
-                    pd.spname = pd.big2$tip.label,
-                    pd.wd = pd.big2$pd.wd,
+                    pd.desc = pd.big$pd.file, 
+                    pd.spname = pd.big$tip.label,
+                    pd.wd = pd.big$pd.wd,
                     nd.list = niche.dif$nd,
                     nd.spname = niche.dif$names,
                     ndbig.wd = niche.dif$nd.wd,

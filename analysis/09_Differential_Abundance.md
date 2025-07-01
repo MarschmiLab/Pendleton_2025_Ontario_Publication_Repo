@@ -1,7 +1,7 @@
 ---
 title: "Differential Abundance" 
 author: "Augustus Pendleton"
-date: "27 June, 2025"
+date: "01 July, 2025"
 output:
   html_document:
     code_folding: show
@@ -158,7 +158,7 @@ centroid_data %>%
         legend.position = "none")  
 ```
 
-<img src="../figures/09_Differential_Abundance/FIGURE-S12C-1.png" style="display: block; margin: auto;" />
+<img src="../figures/09_Differential_Abundance/FIGURE-S9C-1.png" style="display: block; margin: auto;" />
 
 
 ## Session Info
@@ -179,7 +179,7 @@ sessioninfo::session_info()
 ##  collate  en_US.UTF-8
 ##  ctype    en_US.UTF-8
 ##  tz       America/New_York
-##  date     2025-06-27
+##  date     2025-07-01
 ##  pandoc   3.1.1 @ /usr/lib/rstudio-server/bin/quarto/bin/tools/ (via rmarkdown)
 ## 
 ## ─ Packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 ---
 title: "Alpha Diversity Analysis"
 author: "Augustus Pendleton"
-date: "26 June, 2025"
+date: "01 July, 2025"
 output:
   html_document:
     code_folding: show
@@ -97,7 +97,7 @@ plot_ordination(
         legend.position = "bottom")
 ```
 
-<img src="../figures/07_Biodiversity_Analysis/FIGURE-S2B-1.png" style="display: block; margin: auto;" />
+<img src="../figures/07_Biodiversity_Analysis/FIGURE-S13B-1.png" style="display: block; margin: auto;" />
 
 
 ```r
@@ -126,7 +126,7 @@ ggplot(dend_data$segments) +
   theme(legend.position = "none")
 ```
 
-<img src="../figures/07_Biodiversity_Analysis/FIGURE-S2A-1.png" style="display: block; margin: auto;" />
+<img src="../figures/07_Biodiversity_Analysis/FIGURE-S13A-1.png" style="display: block; margin: auto;" />
 
 Generally replicates are most similar to each other!
 
@@ -211,7 +211,7 @@ size_based_data %>%
   labs(x = "Sample Size", y = "Richness")
 ```
 
-<img src="../figures/07_Biodiversity_Analysis/FIGURE-S4-1.png" style="display: block; margin: auto;" />
+<img src="../figures/07_Biodiversity_Analysis/FIGURE-S14-1.png" style="display: block; margin: auto;" />
 
 This makes me feel good!
 
@@ -268,7 +268,7 @@ sessioninfo::session_info()
 ##  collate  en_US.UTF-8
 ##  ctype    en_US.UTF-8
 ##  tz       America/New_York
-##  date     2025-06-26
+##  date     2025-07-01
 ##  pandoc   3.1.1 @ /usr/lib/rstudio-server/bin/quarto/bin/tools/ (via rmarkdown)
 ## 
 ## ─ Packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

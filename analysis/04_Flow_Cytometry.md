@@ -1,7 +1,7 @@
 ---
 title: "Analyzing Flow Cytometry for Cell Counts"
 author: "Augustus Pendleton"
-date: "26 June, 2025"
+date: "01 July, 2025"
 output:
   html_document:
     code_folding: show
@@ -289,7 +289,7 @@ ggcyto(f_set_renamed, aes(x = "FSC-A",y = "FL1-A")) +
   geom_stats(type = "percent")
 ```
 
-<img src="../figures/04_Flow_Cytometry/FIGURE-S1-1.png" style="display: block; margin: auto;" />
+<img src="../figures/04_Flow_Cytometry/FIGURE-S12-1.png" style="display: block; margin: auto;" />
 
 # Session Info
 
@@ -309,7 +309,7 @@ sessioninfo::session_info()
 ##  collate  en_US.UTF-8
 ##  ctype    en_US.UTF-8
 ##  tz       America/New_York
-##  date     2025-06-26
+##  date     2025-07-01
 ##  pandoc   3.1.1 @ /usr/lib/rstudio-server/bin/quarto/bin/tools/ (via rmarkdown)
 ## 
 ## ─ Packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

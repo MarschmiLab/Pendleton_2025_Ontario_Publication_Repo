@@ -229,7 +229,7 @@ save(meta_with_ccs, file = "data/04_cytometry_exports/meta_with_ccs.RData")
 
 ## Determining FSC-A vs FITC-A gate
 
-```{r FIGURE-S1}
+```{r FIGURE-S12}
 all_files <- list.files("data/04_cytometry_exports/unstained_vs_stained/", ".fcs")
 
 relevant_files <- all_files[all_files %in% c("D01.fcs","D02.fcs","D03.fcs", "C02.fcs","C05.fcs","C08.fcs", "A02.fcs")]

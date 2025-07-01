@@ -225,7 +225,7 @@ abs_unifrac_dist_0.5 <- as.dist(absolute_wunifrac$unifracs[, , "d_0.5"])
 
 # Hierarchical clustering to define groups
 
-```{r FIGURE-S3A, fig.width=3, fig.height=9}
+```{r FIGURE-S5A, fig.width=3, fig.height=9}
 
 wun_hclust <- abs_unifrac_dist_0.5 %>%
   hclust(method = "average")
@@ -353,7 +353,7 @@ pcoa_theme <- ggplot2:::plot_theme(ggplot_build(wun_pcoa_abs_hier)$plot)
 
 ```
 
-```{r, FIGURE-S3C, fig.width = 7, fig.height = 7}
+```{r, FIGURE-S5C, fig.width = 7, fig.height = 7}
 
 ord_df<- plot_ordination(
   physeq = full_abs_physeq,
@@ -419,7 +419,7 @@ There is a significant difference in dispersion, in that Shallow September is hi
 
 # Clustering Surface Communites (Figure 1D)
 
-```{r FIGURE-S9A, fig.width = 5, fig.height = 5}
+```{r FIGURE-S4A, fig.width = 5, fig.height = 5}
 
 # First, May
 surf_may <- full_abs_physeq %>%
@@ -474,7 +474,7 @@ ggplot(segment(data)) +
 ```
 
 
-```{r FIGURE-S9B, fig.width = 5, fig.height = 5}
+```{r FIGURE-S4B, fig.width = 5, fig.height = 5}
 
 surf_sep <- full_abs_physeq %>%
   ps_filter(month=="September", Depth_Class == "E")
@@ -527,7 +527,7 @@ How do our stations cluster based on metadata? Below, I select numerical metadat
 
 It took a lot of work to make the PCA and PCoA look the same, haha, but I think it was worth it.
 
-```{r FIGURE-S3B, fig.width=7, fig.height=7}
+```{r FIGURE-S5B, fig.width=7, fig.height=7}
 
 # Select our environmental metadata
 metadata_df <- full_abs_physeq %>%
@@ -671,7 +671,7 @@ class_abs_abund
 
 # Absolute Most abundant ASVs
 
-```{r FIGURE-S12B, fig.width = 6, fig.height = 6}
+```{r FIGURE-S9B, fig.width = 6, fig.height = 6}
 
 # Make a dataframe with every ASV's abundance
 asv_melted <- full_abs_physeq %>%
@@ -709,7 +709,7 @@ asv_melted %>%
 
 Here I do the same thing as above, but without an abundance cutoff. This means that we can't really see specific species anymore, but can evalute the overall distributions of ASVs (and support our claim that we didn't observe very many conditionally rare taxa). 
 
-```{r FIGURE-S12A, fig.width=8, fig.height=7}
+```{r FIGURE-S9A, fig.width=8, fig.height=7}
 
 all_asvs <- asv_melted %>%
   select(ASV, Rep_ID, Abundance) %>%
@@ -739,7 +739,7 @@ all_asvs
 
 ```
 
-# Highlighting Specific Taxa (Figures S10A and S15)
+# Highlighting Specific Taxa (Figures S6A and S15)
 
 ## Highlighting acI-C2 (Fig. S15)
 
@@ -779,9 +779,9 @@ asv_melted %>%
 
 ```
 
-## Highlighting Deep Taxa in Upwelling (Fig. S10A)
+## Highlighting Deep Taxa in Upwelling (Fig. S6A)
 
-```{r FIGURE-S10A-with-pvals, fig.width = 9, fig.height = 3}
+```{r FIGURE-S6A-with-pvals, fig.width = 9, fig.height = 3}
 
 asv_melted %>%
   filter(Comp_Group_Hier_Colors %in% c("Deep (September)", "Shallow_September")) %>%
@@ -804,7 +804,7 @@ asv_melted %>%
 ```
 
 
-```{r FIGURE-S10A, fig.width = 9, fig.height = 3}
+```{r FIGURE-S6A, fig.width = 9, fig.height = 3}
 
 asv_melted %>%
   filter(Comp_Group_Hier_Colors %in% c("Deep (September)", "Shallow_September")) %>%
@@ -835,7 +835,7 @@ asv_melted %>%
 
 First, we look at the ASV abundance distributions at different stations (near, or apart, from upwellings or the Welland Canal)
 
-```{r FIGURE-S11A, fig.width = 6.5, fig.height=2.5}
+```{r FIGURE-S7A, fig.width = 6.5, fig.height=2.5}
 
 asv_df_rel <- 
   full_abs_physeq %>%
@@ -856,7 +856,7 @@ asv_df_rel %>%
 
 Repeat for September
 
-```{r FIGURE-S11B, fig.width = 6.5, fig.height=2.5}
+```{r FIGURE-S7B, fig.width = 6.5, fig.height=2.5}
 
 asv_df_rel %>%
   filter(Station_ID %in% c(35, 38, 717, 41, 17), 
@@ -873,7 +873,7 @@ asv_df_rel %>%
 
 Now, I plot the taxonomic composition of the samples I showed above, but only of ASVs which had a relative abundance *less than 0.0001*! There's a lot of code to tweak the ordering and aesthetics.
 
-```{r FIGURE-S11C, fig.width = 8, fig.height = 10}
+```{r FIGURE-S7C, fig.width = 8, fig.height = 10}
 
 rare_physeq <- 
   full_abs_physeq %>%
@@ -929,7 +929,7 @@ rare_rel_abund %>%
 
 # Identifying ASVs Unique to Upwelling Stations
 
-```{r FIGURE-S10B, fig.width = 5, fig.height=5}
+```{r FIGURE-S6B, fig.width = 5, fig.height=5}
 
 # The trans stands for "transient"
 trans_taxa <- asv_melted %>%
@@ -960,7 +960,7 @@ asv_melted %>%
 
 Next, we look for unique interactions (pairs of ASVs only seen in one sample)
 
-```{r FIGURE-S10C, fig.width = 5, fig.height=5}
+```{r FIGURE-S6C, fig.width = 5, fig.height=5}
 
 pairs <- asv_melted %>%
   filter(Abundance > 1e3) %>% # Set a minimum abundance threshold

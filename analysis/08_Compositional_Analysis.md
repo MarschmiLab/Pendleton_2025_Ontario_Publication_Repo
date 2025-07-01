@@ -1,7 +1,7 @@
 ---
 title: "Compositional Analysis" 
 author: "Augustus Pendleton"
-date: "27 June, 2025"
+date: "01 July, 2025"
 output:
   html_document:
     code_folding: show
@@ -317,7 +317,7 @@ ggplot(dend_data$segments) +
   theme(legend.position = "none")
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S3A-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S5A-1.png" style="display: block; margin: auto;" />
 
 We'll also make a "blank" dendrogram that will be used to structure the compositional plot (Figure 2D)
 
@@ -433,7 +433,7 @@ ggplot(data = ord_df,
         legend.box.background = element_blank())
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S3C-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S5C-1.png" style="display: block; margin: auto;" />
 
 # PERMANOVA for our overall ordination
 
@@ -569,7 +569,7 @@ ggplot(segment(data)) +
   geom_hline(yintercept = 0.32, linetype = 2, size = 1)
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S9A-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S4A-1.png" style="display: block; margin: auto;" />
 
 
 
@@ -624,7 +624,7 @@ ggplot(segment(data)) +
   geom_hline(yintercept = 0.32, linetype = 2, size = 1)
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S9B-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S4B-1.png" style="display: block; margin: auto;" />
 
 # PCA of Environmental Metadata
 
@@ -702,7 +702,7 @@ env_pca <- ggplot(data = point_df, aes(x=x, y=y, color = Comp_Group_Hier_Colors)
 env_pca
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S3B-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S5B-1.png" style="display: block; margin: auto;" />
 
 # Absolute Abundance Plots
 
@@ -813,7 +813,7 @@ asv_melted %>%
   theme(legend.position = "none")
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S12B-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S9B-1.png" style="display: block; margin: auto;" />
 
 Here I do the same thing as above, but without an abundance cutoff. This means that we can't really see specific species anymore, but can evalute the overall distributions of ASVs (and support our claim that we didn't observe very many conditionally rare taxa). 
 
@@ -846,9 +846,9 @@ all_asvs <- asv_melted %>%
 all_asvs
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S12A-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S9A-1.png" style="display: block; margin: auto;" />
 
-# Highlighting Specific Taxa (Figures S10A and S15)
+# Highlighting Specific Taxa (Figures S6A and S15)
 
 ## Highlighting acI-C2 (Fig. S15)
 
@@ -890,7 +890,7 @@ asv_melted %>%
 
 <img src="../figures/08_Compositional_Analysis/FIGURE-S15-1.png" style="display: block; margin: auto;" />
 
-## Highlighting Deep Taxa in Upwelling (Fig. S10A)
+## Highlighting Deep Taxa in Upwelling (Fig. S6A)
 
 
 ```r
@@ -914,7 +914,7 @@ asv_melted %>%
   ggpubr::stat_compare_means(comparisons = list(c(1,2),c(2,3)))
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S10A-with-pvals-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S6A-with-pvals-1.png" style="display: block; margin: auto;" />
 
 
 
@@ -942,7 +942,7 @@ asv_melted %>%
   ggpubr::stat_compare_means(comparisons = list(c(1,2),c(2,3)), label = "p.signif")
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S10A-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S6A-1.png" style="display: block; margin: auto;" />
 
 
 # Exploring Unique Taxa and Unique Interactions
@@ -968,7 +968,7 @@ asv_df_rel %>%
   labs(x = bquote(log[10]~(Relative~Abundance~of~ASV)), y = "Count")
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S11A-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S7A-1.png" style="display: block; margin: auto;" />
 
 Repeat for September
 
@@ -986,7 +986,7 @@ asv_df_rel %>%
   labs(x = bquote(log[10]~(Relative~Abundance~of~ASV)), y = "Count")
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S11B-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S7B-1.png" style="display: block; margin: auto;" />
 
 Now, I plot the taxonomic composition of the samples I showed above, but only of ASVs which had a relative abundance *less than 0.0001*! There's a lot of code to tweak the ordering and aesthetics.
 
@@ -1043,7 +1043,7 @@ rare_rel_abund %>%
   guides(fill = guide_legend(ncol = 1))
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S11C-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S7C-1.png" style="display: block; margin: auto;" />
 
 # Identifying ASVs Unique to Upwelling Stations
 
@@ -1075,7 +1075,7 @@ asv_melted %>%
         axis.ticks.y = element_blank())
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S10B-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S6B-1.png" style="display: block; margin: auto;" />
 
 Next, we look for unique interactions (pairs of ASVs only seen in one sample)
 
@@ -1113,7 +1113,7 @@ pairs %>%
         axis.ticks.y = element_blank())
 ```
 
-<img src="../figures/08_Compositional_Analysis/FIGURE-S10C-1.png" style="display: block; margin: auto;" />
+<img src="../figures/08_Compositional_Analysis/FIGURE-S6C-1.png" style="display: block; margin: auto;" />
 
 # Saving out relevant objects for spatial analysis
 
@@ -1138,7 +1138,7 @@ sessioninfo::session_info()
 ##  collate  en_US.UTF-8
 ##  ctype    en_US.UTF-8
 ##  tz       America/New_York
-##  date     2025-06-27
+##  date     2025-07-01
 ##  pandoc   3.1.1 @ /usr/lib/rstudio-server/bin/quarto/bin/tools/ (via rmarkdown)
 ## 
 ## ─ Packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

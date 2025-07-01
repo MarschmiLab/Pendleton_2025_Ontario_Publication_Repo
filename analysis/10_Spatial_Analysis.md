@@ -1,7 +1,7 @@
 ---
 title: "Spatial Analysis"
 author: "Augustus Pendleton"
-date: "27 June, 2025"
+date: "01 July, 2025"
 output:
   html_document:
     code_folding: show
@@ -196,7 +196,7 @@ tm_shape(sep_lines) +
   tm_layout(frame = FALSE)
 ```
 
-<img src="../figures/10_Spatial_Analysis/FIGURE-S5A-1.png" style="display: block; margin: auto;" />
+<img src="../figures/10_Spatial_Analysis/FIGURE-S1A-1.png" style="display: block; margin: auto;" />
 
 We also map the GLATOs buoy locations on top of these transect lines, for the inset map in Figure S6A. 
 
@@ -235,7 +235,7 @@ tm_shape(com_outlines, bbox = st_bbox(buoys) * c(.96, .98, 1.02, 1.08)) +
   tm_scalebar(breaks = c(0,25, 50), position = c(.8,0), text.size = 1)
 ```
 
-<img src="../figures/10_Spatial_Analysis/FIGURE-S6A-1.png" style="display: block; margin: auto;" />
+<img src="../figures/10_Spatial_Analysis/FIGURE-S2A-1.png" style="display: block; margin: auto;" />
 
 Here, we extract the bathymetry along our transects in May and September. We also transformed our CTD casts and sampling points to "Distance Along Transect", rather than Lat/Long.
 
@@ -405,7 +405,7 @@ all_plots <- wrap_plots(may_plots, guides = "collect", ncol = 5) / wrap_plots(se
 all_plots
 ```
 
-<img src="../figures/10_Spatial_Analysis/FIGURE-S5B-1.png" style="display: block; margin: auto;" />
+<img src="../figures/10_Spatial_Analysis/FIGURE-S1B-1.png" style="display: block; margin: auto;" />
 
 # Writing out data for interpolation in QGIS
 
@@ -532,7 +532,7 @@ dol_df %>%
   labs(x = "", y = "Dolichospermum NIES41 sp.\n(cells/mL)")
 ```
 
-<img src="../figures/10_Spatial_Analysis/FIGURE-S13B-1.png" style="display: block; margin: auto;" />
+<img src="../figures/10_Spatial_Analysis/FIGURE-S10B-1.png" style="display: block; margin: auto;" />
 
 
 
@@ -551,7 +551,7 @@ micro_df %>%
   labs(x = "", y = "Microcystis PCC-7914 sp.\n(cells/mL)")
 ```
 
-<img src="../figures/10_Spatial_Analysis/FIGURE-S13C-1.png" style="display: block; margin: auto;" />
+<img src="../figures/10_Spatial_Analysis/FIGURE-S10C-1.png" style="display: block; margin: auto;" />
 
 Then we write out values for spatial interpolation in QGIS
 
@@ -932,7 +932,7 @@ dist_decay_unweighted_deep <-
   plot_layout(guides = "collect")
 ```
 
-<img src="../figures/10_Spatial_Analysis/FIGURE-S14CF-1.png" style="display: block; margin: auto;" />
+<img src="../figures/10_Spatial_Analysis/FIGURE-S11CF-1.png" style="display: block; margin: auto;" />
 
 
 
@@ -979,7 +979,7 @@ depth_decay_unweighted <- tidy_dist_decay %>%
 depth_decay_unweighted
 ```
 
-<img src="../figures/10_Spatial_Analysis/FIGURE-S14B-1.png" style="display: block; margin: auto;" />
+<img src="../figures/10_Spatial_Analysis/FIGURE-S11B-1.png" style="display: block; margin: auto;" />
 
 Now we do the decay relationships for the main text, which use weighted distance and don't separate by depths. 
 
@@ -1183,7 +1183,7 @@ map(formulas, \(form){
 ## [1] 0.001
 ## 
 ## $Geo
-## [1] 0.061
+## [1] 0.075
 ```
 
 Then, we remake this figure, to be simpler and clearer:
@@ -1264,7 +1264,7 @@ varpart_results <- vegan::varpart(Y = abs_un, month, depth, geo, env)
 plot(varpart_results, Xnames = c("Month","Depth","Geo. Distance","Env."))
 ```
 
-<img src="../figures/10_Spatial_Analysis/FIGURE-S14A-1.png" style="display: block; margin: auto;" />
+<img src="../figures/10_Spatial_Analysis/FIGURE-S11A-1.png" style="display: block; margin: auto;" />
 
 I love this plot so I'm keeping it in here, but we don't use it in the paper. 
 
@@ -1354,7 +1354,7 @@ sessioninfo::session_info()
 ##  collate  en_US.UTF-8
 ##  ctype    en_US.UTF-8
 ##  tz       America/New_York
-##  date     2025-06-27
+##  date     2025-07-01
 ##  pandoc   3.1.1 @ /usr/lib/rstudio-server/bin/quarto/bin/tools/ (via rmarkdown)
 ## 
 ## ─ Packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

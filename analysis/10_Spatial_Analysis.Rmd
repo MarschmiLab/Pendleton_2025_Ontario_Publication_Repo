@@ -154,7 +154,7 @@ sep_all_sp <- sep_all_stations %>%
 
 This next section is a little tricky. We want to show our transects as lines, and we'll use this for our vertical cross sections of temperature (Figure S5). Everything below is me makes these nice transect lines and extracting bathymetry along those transects. 
 
-```{r FIGURE-S5A, fig.width = 3, fig.height=1}
+```{r FIGURE-S1A, fig.width = 3, fig.height=1}
 
 shoreline_spots_both <- sep_all_sp %>%
   filter(Station_ID%in% c(8,17,29, 35, 38, 43, 48, 717, 62, 66)) %>%
@@ -223,7 +223,7 @@ tm_shape(sep_lines) +
 
 We also map the GLATOs buoy locations on top of these transect lines, for the inset map in Figure S6A. 
 
-```{r FIGURE-S6A, fig.width = 8, fig.height = 6}
+```{r FIGURE-S2A, fig.width = 8, fig.height = 6}
 
 buoys <- data.frame(buoy = c("LNR314","WLO003","PPW016", "LON024", "LOJ038", "LOH024", "Lake Erie at Buffalo"),
            lat = c(43.3408, 43.51568, 43.77682, 43.41419,43.67258,43.81907, 42.887067),
@@ -335,7 +335,7 @@ may_sam_points <- sample_sf_abs %>%
 
 Finally, we'll inteprolat and plot those vertical transects, each as its own little panel, which we'll combine together with patchwork. 
 
-```{r FIGURE-S5B, fig.width=20, fig.height=8}
+```{r FIGURE-S1B, fig.width=20, fig.height=8}
 
 trans <- c("T1","T2","T3","T4","T5")
 
@@ -487,7 +487,7 @@ cell_count_sp <- sample_sf %>%
 
 # Plotting Harmful Algae (Figure S13)
 
-```{r FIGURE-S13B, fig.height=3, fig.width=3.5}
+```{r FIGURE-S10B, fig.height=3, fig.width=3.5}
 
 melted <- full_abs_physeq %>%
   psmelt()
@@ -518,7 +518,7 @@ dol_df %>%
 ```
 
 
-```{r FIGURE-S13C, fig.height=3, fig.width=3.5}
+```{r FIGURE-S10C, fig.height=3, fig.width=3.5}
 
 micro_df %>% 
   ggplot(aes(x = Comp_Group_Hier, y = Mic_Abund, color = Comp_Group_Hier)) + 
@@ -895,7 +895,7 @@ dist_decay_unweighted_deep <-
 
 ```
 
-```{r FIGURE-S14CF, fig.width = 8, fig.height = 6.5}
+```{r FIGURE-S11CF, fig.width = 8, fig.height = 6.5}
 
 (dist_decay_unweighted_shallow + dist_decay_weighted_surface) / (dist_decay_unweighted_deep +dist_decay_weighted_deep) + 
   plot_layout(guides = "collect")
@@ -903,7 +903,7 @@ dist_decay_unweighted_deep <-
 ```
 
 
-```{r FIGURE-S14B, fig.width = 3.75, fig.height = 3}
+```{r FIGURE-S11B, fig.width = 3.75, fig.height = 3}
 
 depth_models <- tidy_dist_decay %>%
   filter(month.x == month.y) %>%
@@ -1165,7 +1165,7 @@ var_plot
 
 Then, we do variance partitioning with unweighted Unifrac.
 
-```{r FIGURE-S14A, fig.height=4, fig.width=4.5}
+```{r FIGURE-S11A, fig.height=4, fig.width=4.5}
 
 full_records <- full_abs_physeq %>%
   sample_data() %>%

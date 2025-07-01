@@ -77,7 +77,7 @@ load("data/08_compositional_exports/cut_table.RData")
 
 # Confirm replicates are close to each other
 
-```{r FIGURE-S2B, fig.width = 6, fig.height = 4}
+```{r FIGURE-S13B, fig.width = 6, fig.height = 4}
 
 new_sam_data <- trim_tree_physeq %>%
   ps_mutate(Rep_ID = paste(month, Station_ID, Depth_Class, sep = "_")) %>%
@@ -106,7 +106,7 @@ plot_ordination(
 
 ```
 
-```{r FIGURE-S2A, fig.height = 9, fig.width = 3}
+```{r FIGURE-S13A, fig.height = 9, fig.width = 3}
 
 jac_dist_mat <- distance(rep_physeq, "bray", binary = TRUE)
 
@@ -205,7 +205,7 @@ We'll be using the size_based output. Coverage is inapplicable to DADA2 datasets
 
 Now, let's confirm we reach saturation for our samples (and so can use their observed values without fear of underestimation). 
 
-```{r FIGURE-S4, fig.width=10, fig.height=5.33}
+```{r FIGURE-S14, fig.width=10, fig.height=5.33}
 size_based_data %>%
   dplyr::rename(Rep_ID = Assemblage) %>%
   left_join(joined_vars) %>%

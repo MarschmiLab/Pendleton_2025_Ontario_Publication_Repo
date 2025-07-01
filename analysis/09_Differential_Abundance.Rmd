@@ -124,7 +124,7 @@ melted_3group <- psmelt(releveled_physeq)
 
 So I had this fun idea for how to plot these data. I want to express both how strongly a given ASV is present in one group vs. another, while also showing its overall general abundance. To do this, I am defining each group (Deep, Shallow_May, and Shallow_September) as an axis along the unit circle (at 0, 2/3pi, and 4/3pi). Then, the mean abundance of each Class along each of those axes forms a triangle. I then calculate the centroid of that triangle, and plot it. These allows us to see when a given class trends two just one group, or sorta both groups, or isn't really that strongly different. It was a fun dive back into Trig and the unit circle.
 
-```{r FIGURE-S12C, fig.width = 6.5, fig.height = 6.5}
+```{r FIGURE-S9C, fig.width = 6.5, fig.height = 6.5}
 
 centroid_data <- melted_3group %>%
   select(Class, Abundance, Comp_Group_Hier) %>%
