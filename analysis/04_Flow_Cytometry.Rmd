@@ -1,0 +1,256 @@
+---
+title: "Analyzing Flow Cytometry for Cell Counts"
+author: "Augustus Pendleton"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: show
+    highlight: default
+    keep_md: yes
+    theme: journal
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+      toc_depth: 3
+editor_options: 
+  chunk_output_type: console
+---
+<style>
+pre code, pre, code {
+  white-space: pre !important;
+  overflow-x: scroll !important;
+  word-break: keep-all !important;
+  word-wrap: initial !important;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+# For width of code chunks and scroll bar 
+options(width=250)
+
+knitr::opts_chunk$set(eval = TRUE, 
+                      echo = TRUE, 
+                      include = TRUE,
+                      warning = FALSE,
+                      collapse = FALSE,
+                      message = FALSE,
+                      dpi=300, 
+                      dev = c("png"),
+                      engine = "R", # Chunks will always have R code, unless noted
+                      error = TRUE,
+                      fig.path="../figures/04_Flow_Cytometry/",  
+                      fig.align = "center") 
+
+```
+
+## Purpose of this document
+
+To analyze flow cytometry data so as to provide absolute abundance estimation for Lake Ontario samples. Note that in our original project layout, these files were in separate folders (labeled as Date_Plate) and then within each folder was data from that run. In the future, this is incompatible with uploads to FlowRepository, or other storage. So now I've switched the analyses to reference those FlowRepository files directly. I have more ideas as to how to make this less painful for our lab in the future.
+
+First, let's load packages and previous data:
+
+```{r data-load}
+pacman::p_load(tidyverse, patchwork, flowCore, ggcyto, fun.gus, flow.gus, ggpubr, install = FALSE)
+
+knitr::write_bib(file = "data/04_cytometry_exports/packages.bib")
+
+source("code/R/plotting_aesthetics.R")
+
+load("data/01_dada2_exports/meta_track.RData")
+
+```
+
+
+## Finding FCS files:
+
+This assumes you have downloaded the files from FlowRepository (#FR-FCM-Z8SJ) into data/04_cytometry_exports/fcs_files/
+
+```{r load-flowSets}
+flow_files <- list.files("data/04_cytometry_exports/fcs_files", ".fcs", full.names = T)
+
+well_files <- list.files("data/04_cytometry_exports/fcs_files", "WellMap.csv",  full.names = T)
+
+well_plates <- basename(well_files) %>%
+  str_extract("Plate.")
+
+well_maps <- map(well_files, read_csv)
+
+names(well_maps) <- well_plates
+
+beads <- flow_files[str_detect(flow_files, "B01.fcs")]
+
+pbs_bead_wells <- map(well_maps, \(x){
+  x %>%
+    dplyr::filter(str_detect(Sample_ID, "(?i)PBS|BEADS")) %>%
+    pull(Well)
+})
+
+pbs_bead_files <- map2(pbs_bead_wells, well_plates, \(x,y)paste(y,x, sep = "_")) %>%
+  unlist() %>%
+  str_flatten(collapse = "|")
+
+drop_pbs_and_beads <- flow_files[-str_which(flow_files, pbs_bead_files)]
+
+plates <- drop_pbs_and_beads %>%
+  basename() %>%
+  str_extract("Plate.")
+
+grouped_plates <- data.frame(file = drop_pbs_and_beads,
+           plate = plates) %>%
+  group_by(plate)
+
+split_flowsets <- grouped_plates %>%
+  group_split()
+
+names(split_flowsets) <- unlist(group_keys(grouped_plates))
+
+flowsets <- map(split_flowsets, \(x)read.flowSet(x$file))
+
+```
+
+
+## Specifying experiment-wide variables
+
+```{r load-gate}
+load("data/04_cytometry_exports/fcs_files/g1_FL1_v_FSC.RData")
+
+glut_dilution <- 1002.5/1000
+
+sybr_dilution <- 204/200
+
+manual_dilution <- 20
+
+```
+
+This gate selects the stained region of cells which excluded most unstained cells, and was well above noise in the blank samples
+
+## Plotting a random subset
+
+```{r random-plots}
+
+set.seed(31491)
+
+rand_flows <- map(flowsets, sample, size = 4)
+
+map(rand_flows, \(f){
+  ggcyto(f, aes(x = "FSC-A", y = "FL1-A")) + 
+    geom_hex(bins = 50) + 
+    scale_x_logicle() + 
+    scale_y_logicle() + 
+    geom_gate(g1_FL1_v_FSC) + 
+    labs(x = "FSC-A", y = "SYBR-A")
+})
+```
+
+## Working with beads
+
+```{r beads}
+
+bead_flowset <- read.flowSet(beads)
+
+load("data/04_cytometry_exports/fcs_files/g2_beads_FL1.RData")
+
+ggcyto(bead_flowset, aes(x = "FL1-A")) + 
+  geom_histogram() + 
+  scale_x_log10() + 
+  geom_gate(g2_beads_FL1) + 
+  geom_stats(type = "count")
+
+# Let's calculate counts
+
+bead_events <- count_gated_events(bead_flowset, g2_beads_FL1)
+
+beads_per_50ul <- bead_events$gated * 10
+
+actual_beads <- 0.51*10^5
+
+error_rate <- round((beads_per_50ul - actual_beads) / actual_beads, 3) * 100
+
+volume_sampled <- beads_per_50ul / (actual_beads / 50)
+
+mean_volume_sampled <- mean(volume_sampled)
+
+sem <- sd(volume_sampled) / sqrt(length(volume_sampled))
+```
+
+Our error rates for bead counts are `r error_rate`%. This is within the level of error the machine recommends. This means we are only sampling `r volume_sampled`uL in each well. So we'll assume an average sampling volume of `r mean_volume_sampled`uL +/- `r sem`
+
+# Calculating cell counts
+
+```{r count-events, echo = TRUE, results = "hide"}
+event_counts <- map(flowsets, flow.gus::count_gated_events, g1_FL1_v_FSC)
+
+cell_counts <- map2_dfr(event_counts, well_maps[names(event_counts)], \(flo, wm){
+  flo %>%
+    mutate(Well = str_remove(sample, ".fcs"),
+           Well = str_remove(Well, "2024...._Plate..")) %>%
+    left_join(wm) %>%
+    mutate(cells_per_uL = gated / mean_volume_sampled * sybr_dilution * manual_dilution * glut_dilution,
+           cells_per_ml = cells_per_uL * 1000,
+           cell_per_uL_ungated = initial / mean_volume_sampled * sybr_dilution * manual_dilution * glut_dilution)
+})
+
+write_csv(cell_counts, file = "data/04_cytometry_exports/cell_counts.csv")
+
+```
+
+# Matching cell counts to metadata
+
+```{r matching-cell-counts-to-metadata, fig.height = 4, fig.width = 6}
+
+# Read in some metadata for flow samples
+samp_to_deploy <- read_csv("data/04_cytometry_exports/samp_to_deploy.csv")
+
+counts_with_deploy <- cell_counts %>%
+  group_by(Sample_ID) %>%
+  summarize(avg_cells_per_ml = mean(cells_per_ml)) %>%
+  left_join(samp_to_deploy, na_matches = "never") %>%
+  mutate(Replicate = as.numeric(str_sub(Sample_ID, -1)),
+         Replicate = case_when(Sample_ID == "AAH_ONT_20230519_017_FC_E1" ~ 3, # These had four replicates technicall, so need to do a bit of tweaking
+                                Sample_ID == "AAH_ONT_20230519_017_FC_E2" ~ 4,
+                                TRUE ~ Replicate)) %>%
+  select(-Sample_ID)
+
+
+meta_with_ccs <- meta_track %>%
+  left_join(counts_with_deploy, na_matches = "never")
+
+```
+
+## Saving data
+
+```{r save-data}
+save(meta_with_ccs, file = "data/04_cytometry_exports/meta_with_ccs.RData")
+```
+
+# Background Work
+
+## Determining FSC-A vs FITC-A gate
+
+```{r FIGURE-S1}
+all_files <- list.files("data/04_cytometry_exports/unstained_vs_stained/", ".fcs")
+
+relevant_files <- all_files[all_files %in% c("D01.fcs","D02.fcs","D03.fcs", "C02.fcs","C05.fcs","C08.fcs", "A02.fcs")]
+
+f_set <- read.flowSet(paste0("data/04_cytometry_exports/unstained_vs_stained/",relevant_files))
+
+f_set_renamed <- flow.gus::rename_flowset_samples(f_set, c("07_PBS","01_Sep_017_B2_Stained","02_May_035_B1_Stained","03_Sep_038_E1_Stained",
+                                         "04_Sep_017_B2_Unstained","05_May_035_B1_Unstained","06_Sep_038_E1_Unstained"))
+
+
+ggcyto(f_set_renamed, aes(x = "FSC-A",y = "FL1-A")) + 
+  geom_hex(bins = 50) +
+  scale_x_logicle() + 
+  scale_y_logicle()+
+  geom_gate(g1_FL1_v_FSC) + 
+  geom_stats(type = "percent")
+
+```
+
+# Session Info
+
+```{r session-data}
+sessioninfo::session_info()
+```

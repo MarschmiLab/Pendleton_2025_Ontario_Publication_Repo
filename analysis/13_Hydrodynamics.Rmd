@@ -1,0 +1,794 @@
+---
+title: "Hydrodynamics" 
+author: "Augustus Pendleton"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: show
+    highlight: default
+    keep_md: yes
+    theme: journal
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+      toc_depth: 3
+editor_options: 
+  chunk_output_type: console
+---
+<style>
+pre code, pre, code {
+  white-space: pre !important;
+  overflow-x: scroll !important;
+  word-break: keep-all !important;
+  word-wrap: initial !important;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+# For width of code chunks and scroll bar 
+options(width=250)
+
+options(getClass.msg=FALSE)
+
+knitr::opts_chunk$set(eval = TRUE, 
+                      echo = TRUE, 
+                      include = TRUE,
+                      warning = FALSE,
+                      collapse = FALSE,
+                      message = FALSE,
+                      dpi=300, dev = "png",
+                      engine = "R", # Chunks will always have R code, unless noted
+                      error = TRUE,
+                      fig.path="../figures/13_Hydrodynamics/",  
+                      fig.align = "center") 
+
+```
+
+# Goals of this Document
+
+Here, I work to integrate meteorological and hydrological (hopefully) data which helps us understand how circulation impacted bacterial community composition.
+
+# Load packages 
+```{r load-packages}
+# Efficiently load packages 
+
+pacman::p_load(tidyverse, lubridate, install = FALSE)
+
+knitr::write_bib(file = "Whole_Fraction_16S/data/13_hydrodynamics/packages.bib")
+
+# load in functions and color preferences
+source("Whole_Fraction_16S/code/R/plotting_aesthetics.R")
+
+```
+
+# Wind Direction
+
+```{r daily-winds}
+buoy_names <- read_delim("Whole_Fraction_16S/data/13_hydrodynamics/buoy_45012_meteorological_data.txt") %>%
+  colnames()
+
+clean_buoy_names <- buoy_names[!str_detect(buoy_names, "\\.\\.\\.")] %>%
+  str_remove("\\#")
+
+buoy_data <- read_fwf("Whole_Fraction_16S/data/13_hydrodynamics/buoy_45012_meteorological_data.txt", skip = 2)
+
+colnames(buoy_data) <- clean_buoy_names
+
+may_int <- interval(ymd("2023-05-13"), ymd("2023-05-19"))
+sept_int <- interval(ymd("2023-09-21"), ymd("2023-09-27"))
+
+buoy_data %>%
+  mutate(Date = ymd(paste(YY, MM, DD)),
+         Sample_Month = case_when(Date %within% may_int ~ "May",
+                                  Date %within% sept_int ~ "September")) %>%
+  filter(!is.na(Sample_Month),
+         WSPD < 50) %>%
+  mutate(Bin = cut(WSPD, breaks = c(0,5,10,15,20,25,30))) %>%
+  filter(!is.na(Bin)) %>%
+  ggplot(aes(x = WDIR, fill = Bin)) + 
+  geom_bar() +
+  facet_wrap(DD~Sample_Month) + 
+  scale_x_binned(n.breaks = 16) + 
+  coord_radial()
+
+buoy_data %>%
+  mutate(Date = ymd(paste(YY, MM, DD)),
+         Sample_Month = case_when(Date %within% may_int ~ "May",
+                                  Date %within% sept_int ~ "September")) %>%
+  filter(Sample_Month == "May",
+         WSPD < 50) %>%
+  mutate(Bin = cut(WSPD, breaks = c(0,5,10,15,20,25,30))) %>%
+  filter(!is.na(Bin)) %>%
+  mutate(WDIR = ifelse(WDIR > 348.75, WDIR - 360, WDIR),
+         Bin = fct_rev(Bin)) %>%
+  ggplot(aes(x = WDIR, fill = Bin)) + 
+  geom_bar() +
+  facet_wrap(~DD, nrow = 1) + 
+  scale_x_binned(n.breaks = 16) + 
+  coord_radial() + 
+  scale_fill_manual(labels = c("0 - 5","5 - 10","10 - 15"),
+                    breaks = c("(0,5]","(5,10]","(10,15]"),
+                    values = triglav[c(2,1,3)]) + 
+  labs(fill = "Wind Speed (m/s)") + 
+  coord_radial(start = -(0.03125 * 2 * pi), end = (2 * pi) - (0.03125 * 2 * pi), expand = FALSE) +
+  theme(panel.grid.major.y  = element_line(),
+        axis.line.x = element_blank(),
+        axis.line.r = element_blank(),
+        axis.text.r = element_blank(),
+        axis.ticks.r = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank()) +
+  theme(legend.position = "bottom")
+
+
+sept_long_int <- interval(ymd("2023-09-18"), ymd("2023-10-17"))
+
+buoy_data %>%
+  mutate(Date = ymd(paste(YY, MM, DD)),
+         Sample_Month = case_when(Date %within% may_int ~ "May",
+                                  Date %within% sept_long_int ~ "September")) %>%
+  filter(Sample_Month == "September",
+         WSPD < 50) %>%
+  mutate(Bin = cut(WSPD, breaks = c(0,5,10,15,20,25,30)),
+         Time_Bin = cut(Date, breaks = '5 days')) %>%
+  filter(!is.na(Bin)) %>%
+  mutate(WDIR = ifelse(WDIR > 348.75, WDIR - 360, WDIR),
+         Bin = fct_rev(Bin)) %>%
+  ggplot(aes(x = WDIR, fill = Bin)) + 
+  geom_bar() +
+  facet_wrap(~Time_Bin, nrow = 2) + 
+  scale_x_binned(breaks = -11.25 + (22.5 * c(0:15))) + 
+  coord_radial() + 
+  scale_fill_manual(labels = c("0 - 5","5 - 10","10 - 15"),
+                    breaks = c("(0,5]","(5,10]","(10,15]"),
+                    values = triglav[c(2,1,3,4)]) + 
+  labs(fill = "Wind Speed (m/s)") + 
+  coord_radial(start = -(0.03125 * 2 * pi), end = (2 * pi) - (0.03125 * 2 * pi), expand = FALSE) +
+  theme(panel.grid.major.y  = element_line(),
+        axis.line.x = element_blank(),
+        axis.line.r = element_blank(),
+        axis.text.r = element_blank(),
+        axis.ticks.r = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank()) +
+  theme(legend.position = "bottom")+ 
+  annotate(geom = "text", y = 270, x = 0, label = c("N"), hjust = .5, vjust = .5) + 
+  annotate(geom = "text", y = 270, x = 90, label = c("E"), hjust = .5, vjust = .5) + 
+  annotate(geom = "text", y = 270, x = 180, label = c("S"), hjust = .5, vjust = .5) + 
+  annotate(geom = "text", y = 270, x = 270, label = c("W"), hjust = .5, vjust = .5) + 
+  annotate(geom = "text", y = 100, x = 305, label = "100", hjust = 1, size = 2, color = "grey70") +
+  annotate(geom = "text", y = 200, x = 305, label = "200", hjust = 1, size = 2, color = "grey70")
+
+may_long_int <- interval(ymd("2023-05-05"), ymd("2023-06-03"))
+
+buoy_data %>%
+  mutate(Date = ymd(paste(YY, MM, DD)),
+         Sample_Month = case_when(Date %within% may_long_int ~ "May",
+                                  Date %within% sept_long_int ~ "September")) %>%
+  filter(Sample_Month == "May",
+         WSPD < 50) %>%
+  mutate(Bin = cut(WSPD, breaks = c(0,5,10,15,20,25,30)),
+         Time_Bin = cut(Date, breaks = '5 days')) %>%
+  filter(!is.na(Bin)) %>%
+  mutate(WDIR = ifelse(WDIR > 348.75, WDIR - 360, WDIR),
+         Bin = fct_rev(Bin)) %>%
+  ggplot(aes(x = WDIR, fill = Bin)) + 
+  geom_bar() +
+  facet_wrap(~Time_Bin, nrow = 2) + 
+  scale_x_binned(breaks = -11.25 + (22.5 * c(0:15))) + 
+  coord_radial() + 
+  scale_fill_manual(labels = c("0 - 5","5 - 10","10 - 15"),
+                    breaks = c("(0,5]","(5,10]","(10,15]"),
+                    values = triglav[c(2,1,3,4)]) + 
+  labs(fill = "Wind Speed (m/s)") + 
+  coord_radial(start = -(0.03125 * 2 * pi), end = (2 * pi) - (0.03125 * 2 * pi), expand = FALSE) +
+  theme(panel.grid.major.y  = element_line(),
+        axis.line.x = element_blank(),
+        axis.line.r = element_blank(),
+        axis.text.r = element_blank(),
+        axis.ticks.r = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank()) +
+  theme(legend.position = "bottom")+ 
+  annotate(geom = "text", y = 270, x = 0, label = c("N"), hjust = .5, vjust = .5) + 
+  annotate(geom = "text", y = 270, x = 90, label = c("E"), hjust = .5, vjust = .5) + 
+  annotate(geom = "text", y = 270, x = 180, label = c("S"), hjust = .5, vjust = .5) + 
+  annotate(geom = "text", y = 270, x = 270, label = c("W"), hjust = .5, vjust = .5) + 
+  annotate(geom = "text", y = 100, x = 305, label = "100", hjust = 1, size = 2, color = "grey70") +
+  annotate(geom = "text", y = 200, x = 305, label = "200", hjust = 1, size = 2, color = "grey70")
+
+```
+
+
+```{r wind-speed-rosettes}
+
+buoy_data %>%
+  mutate(Date = ymd(paste(YY, MM, DD)),
+         Sample_Month = case_when(Date %within% may_int ~ "May",
+                                  Date %within% sept_int ~ "September")) %>%
+  filter(!is.na(Sample_Month),
+         WSPD < 50) %>%
+  mutate(Bin = cut(WSPD, breaks = c(0,5,10,15,20,25,30))) %>%
+  filter(!is.na(Bin)) %>% 
+  mutate(WDIR = ifelse(WDIR > 348.75, WDIR - 360, WDIR),
+         Bin = fct_rev(Bin),
+         Sample_Month = factor(Sample_Month, labels = c("May 13th-19th","September 21st-27th"))) %>% 
+  ggplot(aes(x = WDIR, fill = Bin)) + 
+  geom_bar() +
+  facet_wrap(~Sample_Month) + 
+  scale_x_binned(breaks = -11.25 + (22.5 * c(0:15))) +
+  scale_fill_manual(labels = c("0 - 5","5 - 10","10 - 15"),
+                    breaks = c("(0,5]","(5,10]","(10,15]"),
+                    values = triglav[c(2,1,3)]) + 
+  labs(fill = "Wind Speed (m/s)") + 
+  coord_radial(start = -(0.03125 * 2 * pi), end = (2 * pi) - (0.03125 * 2 * pi), expand = FALSE) +
+  theme(panel.grid.major.y  = element_line(),
+        axis.line.x = element_blank(),
+        axis.line.r = element_blank(),
+        axis.text.r = element_blank(),
+        axis.ticks.r = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank()) + 
+  # For some reason can't do this with one annotate call or geom_text...i don't want to talk about it
+  annotate(geom = "text", y = 350, x = 0, label = c("N"), hjust = .5, vjust = .5) + 
+  annotate(geom = "text", y = 350, x = 90, label = c("E"), hjust = .5, vjust = .5) + 
+  annotate(geom = "text", y = 350, x = 180, label = c("S"), hjust = .5, vjust = .5) + 
+  annotate(geom = "text", y = 350, x = 270, label = c("W"), hjust = .5, vjust = .5) + 
+  annotate(geom = "text", y = 100, x = 305, label = "100", hjust = 1, size = 3, color = "grey70") +
+  annotate(geom = "text", y = 200, x = 305, label = "200", hjust = 1, size = 3, color = "grey70") + 
+  annotate(geom = "text", y = 300, x = 305, label = "300", hjust = 1, size = 3, color = "grey70")
+
+```
+
+
+## Working with GLOS buoys
+
+Notes from Mathew Wells:
+
+Lake Tahoe not especiall interesting but UC Irvine has a lot of detail
+
+Lake Geneva also has lots of papers on upwelling in lakes - good to look into! Dr. Andrew Berry and Damien Bouffard
+
+Looking at paper Mathew sent specifically
+
+Poincare waves - no one really gets what they are
+
+If you go out in the middle of the lake - dominated by inertial movements. Drifter will make a circle that's 2km in diameter about every 17 hours
+
+Kelvin waves only happening in nerashore environments because of friction caused by boundary layer
+
+Tides = surface Kelvin wave that propagates along the coastline
+
+sin(45 degress) * 24 hours gives us 17 hours - frequency changes with latitude
+
+Poincare winds are initiated by winds, does move the thermocline at the edges but not necessarily as important for upwellings
+
+Kelvin wave vs. coastal jet - Kelvine wave forms a coastal jet. 
+ 
+ 1. Upwelling initially on one side of lake, and offshore currents flow to the right
+ 2. Then on the opposite shore a coastal jet develops going to the left, which propagates anticlockwise in the lake
+ 3. "Shoaling of internal wavefield"
+ 4. Satellite imagery allows surface expression of propagation of upwelling
+ 5. George Arhondtisis U Toronto
+ 6. SEAGULL go-to repository for everything on the Great Lakes
+ 7. Can find archived FVCOM models
+ 8. Operational NOAA Forecast Data - Great Lakes Forecasting 
+ 9. NetCDF  - .nc, standard oceanography information
+ 10. GLATOS - 200 locations for telemetry with fish - each receiver is sitting at the bottom of the lake. They check them once a year to download the data
+ 11. 
+
+1. Different frequencies at different depths
+
+2. Down/Up/Forward?
+
+3. Strong currents (coastal jet) - can tilt entire mooring, deepening each of the moorings. Might be worth clipping data to fit height and then interpolate values. Most of the top are at 10m
+
+Coastal jets - geostrophic forces
+
+Bottom has a slower period than the top (HOBO loggers), the accuracy might be slightly worse as well (0.7 vs. 0.1)
+
+*Read Lake Tahoe paper*
+
+```{r read-glos-buoy}
+
+first_files <- list.files("Whole_Fraction_16S/data/13_hydrodynamics/glatos_moorings/First_Half/", pattern = "csv", full.names = TRUE)
+
+all_together_firsts <- map(first_files, read_csv) %>%
+  bind_rows()
+
+second_files <- list.files("Whole_Fraction_16S/data/13_hydrodynamics/glatos_moorings/Second_Half/", pattern = "csv", full.names = TRUE)
+
+all_together_seconds <- map(second_files, read_csv) %>%
+  bind_rows()
+
+all_together <- rbind(all_together_firsts, all_together_seconds) %>%
+  filter(sea_water_temperature < 30,
+         depth > 5) %>%
+  filter(!is.na(sea_water_temperature)) %>%
+  mutate(station_id = ifelse(station_id == "WLO010", "OON003", station_id))
+
+summer_interval <- interval(ymd("2023-04-01"), ymd("2024-10-31"))
+
+summer_2023 <- all_together %>%
+  filter(timestamp_utc%within%summer_interval)
+
+summer_2023 %>%
+  mutate(Pressure_Check = is.na(converted_depth_from_pressure)) %>%
+  count(Pressure_Check)
+
+summer_2023 %>%
+  filter(is.na(converted_depth_from_pressure)) %>%
+  group_by(station_id) %>%
+  summarize(n())
+
+summer_2023 %>% 
+  filter(depth > 0) %>%
+  pull(depth) %>% range()
+
+
+
+```
+
+
+```{r single-station-interpolation}
+
+
+binned_summer <- summer_2023 %>% 
+  mutate(Time_Bin = cut(timestamp_utc, breaks = '2 hours')) %>% 
+  group_by(station_id, depth, Time_Bin) %>%
+  summarize(bin_temp = mean(sea_water_temperature)) %>%
+  ungroup()
+
+
+# interpolated_profiles %>% 
+#   ggplot(aes(x = Time_Bin, y = int_depth, fill = int_temp)) + 
+#   geom_tile(na.rm = TRUE) +
+#   facet_wrap(~station_id, nrow = 1) + 
+#   scale_y_reverse() + 
+#   scale_fill_gradient(low = "darkblue", high = "goldenrod1")
+
+```
+
+```{r interpolated-september-surface-splines}
+
+september_2023 <- all_together %>%
+  filter(timestamp_utc%within%interval(ymd("2023-09-15"), ymd("2023-10-31")))
+
+binned_sept <- september_2023 %>% 
+  mutate(Time_Bin = cut(timestamp_utc, breaks = '2 hours')) %>% 
+  group_by(station_id, depth, Time_Bin) %>%
+  summarize(bin_temp = mean(sea_water_temperature)) %>%
+  ungroup()
+
+
+xouts <- seq(5, 50, by = 1)
+
+
+
+interpolated_profiles_sept <- 
+  binned_sept %>%
+  filter(!is.na(bin_temp)) %>%
+  nest_by(station_id, Time_Bin) %>% 
+  mutate(obs = nrow(data)) %>%
+  filter(obs>1) %>%
+  mutate(
+    interpolated = list(
+      data.frame(int_temp = approx(data$depth, data$bin_temp, xout = xouts)$y,
+                 int_depth = xouts)
+    
+  )) %>%
+  unnest(interpolated)
+
+range(september_2023$timestamp_utc)
+
+time_grid <- seq(ymd_hms("2023-08-15 00:00:00"), ymd_hms("2023-11-15 00:00:00"), by = '2 hours')
+length(time_grid)
+
+range(september_2023$depth)
+
+spline_interpolate <- function(station_data){
+  surf_res <- 
+    MBA::mba.surf(station_data, no.X = 1105, no.Y = 170, extend = FALSE, n = 1, m = 5,
+                             sp = TRUE, 
+                b.box = c(1, 1105, 5, 175))  
+  data.frame(surf_res$xyz.est@coords, surf_res$xyz.est@data) %>%
+    rename(Numeric_Bin = x, depth = y, est_temp = z)
+}
+
+dates_for_join <- binned_sept %>%
+  mutate(Numeric_Bin = as.numeric(Time_Bin),
+         Character_Bin = as.character((Time_Bin)),
+         Character_Bin = ifelse(nchar(Character_Bin)==10, paste(Character_Bin, "00:00:00"), Character_Bin),
+         Date_Bin = ymd_hms(Character_Bin)) %>%
+  select(Numeric_Bin, Date_Bin) %>%
+  unique()
+
+unique(dates_for_join$Numeric_Bin) %>% unique()
+
+unique(dates_for_join$Date_Bin) %>% length()
+
+interpolated_sept <- binned_sept %>%
+  mutate(Time_Bin_Num = as.numeric(Time_Bin)) %>%
+  select(station_id, Time_Bin_Num, depth, bin_temp) %>%
+  nest_by(station_id) %>% 
+  mutate(Interpolated = list(spline_interpolate(data))) %>%
+  unnest(Interpolated) %>%
+  left_join(dates_for_join, by = "Numeric_Bin")
+  
+
+interpolated_sept %>% 
+  filter(station_id %in% c("LON024","LOH024","LOL024","LOJ024")) %>%
+  ggplot(aes(x = Date_Bin, y = depth, fill = est_temp)) + 
+  geom_tile() +
+  facet_wrap(~station_id, ncol = 1) + 
+  scale_y_reverse() + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white") +
+  labs(x = "Date", y = "Depth", fill = "Temperature (C)")
+  
+
+interpolated_sept %>% 
+  filter(station_id %in% c("LON024","LNR314","LOJ038")) %>%
+  ggplot(aes(x = Date_Bin, y = depth, fill = est_temp)) + 
+  geom_tile() +
+  facet_wrap(~station_id, ncol = 1) + 
+  scale_y_reverse() + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white") +
+  labs(x = "Date", y = "Depth", fill = "Temperature (C)")
+
+for_points <- binned_sept %>%
+  mutate(Numeric_Bin = as.numeric(Time_Bin)) %>%
+  select(station_id, Numeric_Bin, depth) %>%
+  left_join(dates_for_join, by = "Numeric_Bin")
+
+interpolated_sept %>% 
+  filter(station_id %in% c("LON024","LNR314","LOJ038")) %>%
+  ggplot(aes(x = Date_Bin, y = depth, fill = est_temp)) + 
+  geom_tile() +
+  facet_wrap(~station_id, ncol = 1) + 
+  scale_y_reverse() + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white") +
+  labs(x = "Date", y = "Depth", fill = "Temperature (C)") + 
+  geom_point(data = filter(for_points, 
+                           station_id %in% c("LON024","LNR314","LOJ038")), 
+             fill = "white", size = 0.02)
+
+interpolated_sept %>% 
+  filter(station_id %in% c("LON024","LNR314","LOJ038"),
+         Date_Bin %within% interval(ymd("2023-09-06"),ymd("2023-10-15"))) %>%
+  #mutate(station_id = factor(station_id, levels = c("LNR314","LON024","LOJ038"))) %>%
+  ggplot(aes(x = Date_Bin, y = depth, fill = est_temp)) + 
+  geom_tile() +
+  facet_wrap(~station_id, ncol = 1) + 
+  scale_y_reverse() + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white") +
+  labs(x = "Date", y = "Depth", fill = "Temperature (C)") + 
+    geom_point(data = filter(for_points, 
+                           station_id %in% c("LON024","LNR314","LOJ038")), 
+             fill = "white", size = 0.02) + 
+  coord_cartesian(ylim = c(60, 0))
+```
+
+```{r interpolated-september-all-around, fig.height = 8, fig.width = 6}
+
+
+interpolated_profiles_sept %>%
+  filter(station_id %in% c("LON024","LNR314","LOJ038", "PPW016", "LOH024")) %>%
+  mutate(Time_Bin_Date = as.POSIXct(Time_Bin),
+         station_id = factor(station_id, levels = c("LNR314", "LON024", "LOJ038", "PPW016", "LOH024"))) %>%
+  ggplot(aes(x = Time_Bin_Date, y = int_depth, fill = int_temp)) + 
+  geom_raster(na.rm = TRUE) +
+  facet_wrap(~station_id, ncol = 1, strip.position = "right") + 
+  scale_y_reverse(limits = c(60,0)) + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white",
+                      breaks = c(4,12,20)) +
+  labs(x = "Date", y = "Depth", fill = "Temperature (C)") + 
+  theme(panel.spacing.y = unit(1, "lines"),
+        strip.text.y.right = element_text(angle = 0, size = 14),
+        legend.position = "top")
+
+
+
+
+
+for_points <- binned_sept %>%
+  filter(station_id %in% c("LON024","LNR314","LOJ038", "PPW016", "LOH024", "OON003")) %>%
+  mutate(Numeric_Bin = as.numeric(Time_Bin),
+         Character_Bin = as.character((Time_Bin)),
+         Character_Bin = ifelse(nchar(Character_Bin)==10, paste(Character_Bin, "00:00:00"), Character_Bin),
+         Date_Bin = ymd_hms(Character_Bin),
+         station_id = factor(station_id, levels = c("LON024","LNR314","LOJ038", "PPW016", "LOH024", "OON003")))  %>%
+  select(station_id, Date_Bin, depth) 
+  
+interpolated_profiles_sept %>% 
+  filter(station_id %in% c("LON024","LNR314","LOJ038", "PPW016", "LOH024", "OON003")) %>%
+  mutate(Numeric_Bin = as.numeric(Time_Bin),
+         Character_Bin = as.character((Time_Bin)),
+         Character_Bin = ifelse(nchar(Character_Bin)==10, paste(Character_Bin, "00:00:00"), Character_Bin),
+         Date_Bin = ymd_hms(Character_Bin),
+         station_id = factor(station_id, levels = c("LON024","LNR314","LOJ038", "PPW016", "LOH024", "OON003"))) %>%
+  ggplot(aes(x = Date_Bin, y = int_depth, fill = int_temp)) + 
+  geom_tile(na.rm = TRUE) +
+  facet_wrap(~station_id, ncol = 1) + 
+  scale_y_reverse(limits = c(60,0)) + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white",
+                      breaks = c(4,12,20)) +
+  labs(x = "Date", y = "Depth", fill = "Temperature (C)") + 
+  geom_point(data = for_points,
+             aes(y = depth),
+             fill = "black",
+             size = 0.01)
+```
+
+```{r interpolated-september-linear-approx-cross_transect, height = 8, width = 8}
+interpolated_profiles_sept %>% 
+  filter(station_id %in% c("LON024","LOH024","LOL024","LOJ024")) %>%
+  mutate(Time_Bin_Date = as.POSIXct(Time_Bin)) %>%
+  ggplot(aes(x = Time_Bin_Date, y = int_depth, fill = int_temp)) + 
+  geom_raster(na.rm = TRUE) +
+  facet_wrap(~station_id, ncol = 1) + 
+  scale_y_reverse(limits = c(60,0)) + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white",
+                      breaks = c(4,12,20)) +
+  labs(x = "Date", y = "Depth", fill = "Temperature (C)") + 
+  annotate(geom = "text", label = "↓", x = ymd_hms("2023-09-26 00:00:00"), y = 2)
+
+
+
+for_points <- binned_sept %>%
+  filter(station_id %in% c("LON024","LOH024","LOL024","LOJ024")) %>%
+  mutate(Numeric_Bin = as.numeric(Time_Bin),
+         Character_Bin = as.character((Time_Bin)),
+         Character_Bin = ifelse(nchar(Character_Bin)==10, paste(Character_Bin, "00:00:00"), Character_Bin),
+         Date_Bin = ymd_hms(Character_Bin))  %>%
+  select(station_id, Date_Bin, depth) 
+
+
+interpolated_profiles_sept %>% 
+  filter(station_id %in% c("LON024","LOH024","LOL024","LOJ024")) %>%
+  mutate(Numeric_Bin = as.numeric(Time_Bin),
+         Character_Bin = as.character((Time_Bin)),
+         Character_Bin = ifelse(nchar(Character_Bin)==10, paste(Character_Bin, "00:00:00"), Character_Bin),
+         Date_Bin = ymd_hms(Character_Bin)) %>%
+  ggplot(aes(x = Date_Bin, y = int_depth, fill = int_temp)) + 
+  geom_tile(na.rm = TRUE) +
+  facet_wrap(~station_id, ncol = 1) + 
+  scale_y_reverse(limits = c(60,0)) + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white",
+                      breaks = c(4,12,20)) +
+  labs(x = "Date", y = "Depth", fill = "Temperature (C)") + 
+  geom_point(data = for_points,
+             aes(y = depth),
+             fill = "black",
+             size = 0.01)
+
+interpolated_profiles_sept %>% 
+  filter(station_id %in% c("LNR314")) %>%
+  mutate(Numeric_Bin = as.numeric(Time_Bin),
+         Character_Bin = as.character((Time_Bin)),
+         Character_Bin = ifelse(nchar(Character_Bin)==10, paste(Character_Bin, "00:00:00"), Character_Bin),
+         Date_Bin = ymd_hms(Character_Bin)) %>%
+  filter(Date_Bin %within% interval(ymd("2023-09-22"), ymd("2023-09-24"))) %>%
+  ggplot(aes(x = Date_Bin, y = int_depth, fill = int_temp)) + 
+  geom_tile(na.rm = TRUE) +
+  scale_y_reverse(limits = c(60,0)) + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white",
+                      breaks = c(4,12,20)) +
+  labs(x = "Date", y = "Depth", fill = "Temperature (C)") 
+
+
+interpolated_profiles_sept %>% 
+  filter(station_id %in% c("LOJ038")) %>%
+  mutate(Numeric_Bin = as.numeric(Time_Bin),
+         Character_Bin = as.character((Time_Bin)),
+         Character_Bin = ifelse(nchar(Character_Bin)==10, paste(Character_Bin, "00:00:00"), Character_Bin),
+         Date_Bin = ymd_hms(Character_Bin)) %>%
+  filter(Date_Bin %within% interval(ymd("2023-09-20"), ymd("2023-10-09"))) %>%
+  ggplot(aes(x = Date_Bin, y = int_depth, fill = int_temp)) + 
+  geom_tile(na.rm = TRUE) +
+  scale_y_reverse(limits = c(60,0)) + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white",
+                      breaks = c(4,12,20)) +
+  labs(x = "Date", y = "Depth", fill = "Temperature (C)") 
+
+```
+
+
+```{r interpolated-may, width = 7, height = 5}
+
+may_2023 <- all_together %>%
+  filter(timestamp_utc%within%interval(ymd("2023-04-15"), ymd("2023-06-15")))
+
+# Big caveat - some of these moorings have weird little gaps:
+may_2023 %>%
+  filter(station_id == "LOL024") %>%
+  ggplot(aes(x = timestamp_utc, y = depth)) + 
+  geom_point()
+
+# Had to bin more broadly cause of these gaps
+binned_may <- may_2023 %>% 
+  mutate(Time_Bin = cut(timestamp_utc, breaks = '12 hours')) %>% 
+  group_by(station_id, depth, Time_Bin) %>%
+  summarize(bin_temp = mean(sea_water_temperature, na.rm = TRUE)) %>%
+  ungroup()
+
+xouts <- seq(5, 60, by = 1)
+
+interpolated_profiles_may <- 
+  binned_may %>%
+  filter(!is.na(bin_temp)) %>%
+  nest_by(station_id, Time_Bin) %>% 
+  mutate(obs = nrow(data)) %>%
+  filter(obs>1) %>%
+  mutate(
+    interpolated = list(
+      data.frame(int_temp = approx(data$depth, data$bin_temp, xout = xouts)$y,
+                 int_depth = xouts)
+    
+  )) %>%
+  unnest(interpolated)
+
+
+
+interpolated_profiles_may %>% 
+  filter(station_id %in% c("WLO003","OON003","LOH024","PPW016")) %>%
+  mutate(Time_Bin_Date = as.POSIXct(Time_Bin),
+         station_id = factor(station_id, levels = c("WLO003","OON003","LOH024","PPW016"))) %>% 
+  ggplot(aes(x = Time_Bin_Date, y = int_depth, fill = int_temp)) + 
+  geom_tile(na.rm = TRUE) +
+  facet_wrap(~station_id, ncol = 1, drop = TRUE) + 
+  scale_y_reverse() + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white") +
+  labs(x = "Date", y = "Depth", fill = "Temperature (C)")
+
+
+interpolated_profiles_may %>% 
+  filter(station_id %in% c("LON024","LOH024","LOL024","LOJ024")) %>%
+  mutate(Time_Bin_Date = as.POSIXct(Time_Bin)) %>%
+  ggplot(aes(x = Time_Bin_Date, y = int_depth, fill = int_temp)) + 
+  geom_tile() +
+  facet_wrap(~station_id, ncol = 1) + 
+  scale_y_reverse() + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white") +
+  labs(x = "Date", y = "Depth", fill = "Temperature (C)")
+
+
+interpolated_profiles_may %>% 
+  filter(station_id %in% c("LON024","LNR314","LOJ038")) %>%
+  mutate(Time_Bin_Date = as.POSIXct(Time_Bin),
+         station_id = factor(station_id, levels = c("LNR314","LON024","LOJ038"))) %>%
+  ggplot(aes(x = Time_Bin_Date, y = int_depth, fill = int_temp)) + 
+  geom_tile(na.rm = TRUE) +
+  facet_wrap(~station_id, ncol = 1) + 
+  scale_y_reverse() + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white") +
+  labs(x = "Date", y = "Depth", fill = "Temperature (C)")
+
+```
+
+
+```{r link-may-to-erie, fig.width = 8, fig.height = 6}
+
+lnr314_surface <- interpolated_profiles_may %>% 
+  filter(station_id %in% c("LNR314")) %>%
+  mutate(Time_Bin_Date = as.POSIXct(Time_Bin)) %>%
+  filter(int_depth > 11, int_depth < 13) %>%
+  summarize(int_temp = mean(int_temp, na.rm = TRUE),
+            Time_Bin_Date = Time_Bin_Date) %>%
+  ggplot(aes(x = Time_Bin_Date, y = 1, fill = int_temp)) + 
+  geom_tile(na.rm = TRUE) +
+  scale_y_continuous( expand = expansion(0)) + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white",
+                      breaks = c(4,8,12,16),
+                      limits = c(3, 17)) +
+  labs(x = "Date", y = "LNR314", fill = "Temperature (C)") +
+  theme(axis.line.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) 
+
+wlo003_surface <- interpolated_profiles_may %>% 
+  filter(station_id %in% c("WLO003")) %>%
+  mutate(Time_Bin_Date = as.POSIXct(Time_Bin)) %>%
+  filter(int_depth > 11, int_depth < 13) %>%
+  summarize(int_temp = mean(int_temp, na.rm = TRUE),
+            Time_Bin_Date = Time_Bin_Date) %>%
+  ggplot(aes(x = Time_Bin_Date, y = 1, fill = int_temp)) + 
+  geom_tile(na.rm = TRUE) +
+  scale_y_continuous( expand = expansion(0)) + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white",
+                      breaks = c(4,8,12,16),
+                      limits = c(3, 17)) +
+  labs(x = "Date", y = "WLO003", fill = "Temperature (C)") +
+  theme(axis.line.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) 
+
+
+
+buff_temps <- c(38,	38,	40,	39,	40,	40,	41,	40,	40,	40,	41,	41,	41,	42,	43,	44,	44,	44,	44,	44,	44,	44,	44,	44,	44,	47,	45,	45,	46,	47,
+47,	47,	47,	47,	47,	47,	47,	47,	47,	47,	47,	48,	48,	50,	49,	50,	50,	49,	49,	49,	50,	50,	50,	51,	51,	50,	54,	54,	57,	57,	58,
+61,	62,	60,	58,	59,	59,	59,	59,	60,	59,	61,	61,	60,	59,	60,	60,	60,	61,	62,	63,	63,	64,	63,	65,	64,	65,	65,	65,	65,	65)
+
+days <- seq(ymd("2023-04-01"), ymd("2023-06-30"), by = "day")
+
+river_temps <- data.frame(temp = buff_temps,
+                          Date = days)
+river_colors <- river_temps %>%
+  mutate(int_temp =  (temp - 32) * (5/9)) %>%
+  filter(Date%within%interval(ymd("2023-04-15"), ymd("2023-06-15"))) %>%
+  ggplot(aes(x = Date, fill= int_temp, y = 1)) + 
+  geom_tile() + 
+  scale_y_continuous(expand = expansion(0)) + 
+  labs(y = "Lake Erie at Buffalo", fill = "Temperature (C)") + 
+  scale_fill_gradient(low = "darkblue", high = "goldenrod1", na.value = "white",
+                      breaks = c(4,8, 12,16),
+                      limits = c(3, 17)) + 
+    theme(axis.line.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+  
+library(patchwork)
+wlo003_surface + lnr314_surface + river_colors + 
+  plot_layout(guides = "collect",
+              ncol = 1,
+              heights = c(1, 1, 1))
+
+#ggpreview(width = 8, height = 6)
+```
+
+```{r, eval = FALSE}
+all_together %>%
+  filter(year(timestamp_utc) == 2023) %>%
+  group_by(station_id) %>%
+  summarize(min_d= min(depth),
+            max_d = max(depth),
+            min_date = min(timestamp_utc),
+            max_date = max(timestamp_utc),
+            mean_lat = mean(latitude),
+            mean_long = mean(longitude)) %>% pull(mean_long)
+
+clean_buoy <- all_together %>%
+  filter(station_id %in% c("LNR314","LON024","PPW016", "WLO003")) %>%
+  group_by(station_id) %>%
+  mutate(max_depth = max(depth) - 10,
+         Depth_Class = case_when(depth < 14 ~ "Surface",
+                                 depth > max_depth ~ "Bottom",
+                                 TRUE ~ NA),
+         Day = yday(timestamp_utc),
+         Month = month(timestamp_utc, label = TRUE, abbr = FALSE)
+         ) %>%
+  filter(!is.na(Depth_Class)) %>%
+  ungroup() %>%
+  group_by(station_id, Depth_Class, Day, Month) %>%
+  summarize(temperature = mean(sea_water_temperature)) %>%
+  mutate(buoy = case_when(station_id == "WLO003" ~ "Toronto",
+                          station_id == "LNR314" ~ "Niagara",
+                          station_id == "LON024" ~ "South Shore",
+                          station_id == "PPW016" ~ "Point Petre"),
+         sensor = paste(buoy, Depth_Class, sep = "_")) %>% 
+  ungroup() %>%
+  select(sensor, buoy, depth = Depth_Class, day_of_year = Day, month = Month, temperature)
+
+yday(ymd("2023-05-19"))
+yday(ymd("2023-09-24"))
+clean_buoy %>%
+  ggplot(aes(x = day_of_year, y = temperature, color = depth)) + 
+  geom_line() 
+  facet_wrap(~month)
+  
+clean_buoy %>%
+  ggplot(aes(x = month, y = temperature, fill = depth)) + 
+  geom_boxplot()
+
+#write_csv(clean_buoy, file = "/Users/augustuspendleton/Desktop/Coding/Carpentries_Workshops/Cornell_Carpentries_Jan2025/data/buoy_data.csv")
+
+```

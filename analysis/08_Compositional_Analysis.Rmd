@@ -1,0 +1,1007 @@
+---
+title: "Compositional Analysis" 
+author: "Augustus Pendleton"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: show
+    highlight: default
+    keep_md: yes
+    theme: journal
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+      toc_depth: 3
+editor_options: 
+  chunk_output_type: console
+---
+<style>
+pre code, pre, code {
+  white-space: pre !important;
+  overflow-x: scroll !important;
+  word-break: keep-all !important;
+  word-wrap: initial !important;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+# For width of code chunks and scroll bar 
+options(width=250)
+
+options(getClass.msg=FALSE)
+
+knitr::opts_chunk$set(eval = TRUE, 
+                      echo = TRUE, 
+                      include = TRUE,
+                      warning = FALSE,
+                      collapse = FALSE,
+                      message = FALSE,
+                      dpi=300, dev = "png",
+                      engine = "R", # Chunks will always have R code, unless noted
+                      error = TRUE,
+                      fig.path="../figures/08_Compositional_Analysis/",  
+                      fig.align = "center") 
+
+```
+
+# Load packages 
+```{r load-packages}
+# Efficiently load packages 
+pacman::p_load(phyloseq, ggpubr, vegan, tidyverse, microViz, patchwork, ggrepel, combinat, ggdendro, GUniFrac, install = FALSE)
+
+packageDescription("GUniFrac") # Make sure we're using the version from MarschmiLab!!!!
+
+knitr::write_bib(file = "data/08_compositional_exports/packages.bib")
+
+# load in functions and color preferences
+source("code/R/plotting_aesthetics.R")
+```
+
+# Load Data
+
+```{r load_diversty_physeq}
+load("data/07_biodiversity_exports/full_diversity_physeq.RData")
+```
+
+This physeq already has unnecessary replicates removed, and samples merged, as described in 07_Biodiversity Analysis. 
+
+```{r calculate-merged-raremax}
+merge_raremax <- min(sample_sums(full_diversity_physeq)) # Find new limit for rarefaction
+```
+
+Our minimum number of reads is `r merge_raremax` reads
+
+# Transforming counts to absolute abundance
+
+Next, we are going to normalize each of our samples by their absolute cell abundance, by multiplying the relative abundance of each read in that sample by the cells/ml of that sample. 
+
+
+```{r transform_to_absolute_abund}
+rel_abund_count_matrix <- full_diversity_physeq %>%
+  transform_sample_counts(function(x) {x/sum(x)}) %>% # Convert to relative abundance
+  otu_table() %>% # Pull OTU table
+  as.matrix() # Convert to matrix
+  
+# Pull our cell counts and arrange to match row order of OTU table
+cell_counts <- full_diversity_physeq %>%
+  sample_data() %>%
+  data.frame() %>%
+  select(Rep_ID, avg_cells_per_ml) %>%
+  arrange(match(Rep_ID, row.names(rel_abund_count_matrix)))
+
+# NO NEWS IS GOOD NEWS
+stopifnot(all(cell_counts$Rep_ID == row.names(rel_abund_count_matrix)))
+
+# Multiply relative abundance by cells/mL
+transformed_asv_counts <- cell_counts$avg_cells_per_ml * rel_abund_count_matrix
+
+# Round to integer values
+trans_data_mat <- round(transformed_asv_counts@.Data,0) 
+
+diffs <- rowSums(trans_data_mat) - cell_counts$avg_cells_per_ml
+
+hist(diffs)
+```
+
+Here, I'm looking at at how many cells I've "lost" or "gained" through rounding issues. This isn't necessarily trivial. For instance, if I want to make sure every single ASV remains in my dataset, I would use ceiling, which will round up. But then samples with higher richness "gain" abundances more than less-rich samples. In the end, I decided to use round, which while imperfect (and I do remove some rare ASVs from the dataset in this way), gives the most even distribution of cell count differences (centered around zero) than other methods.
+
+```{r make-new-abs-physeg}
+full_abs_physeq <- full_diversity_physeq
+
+full_abs_physeq@otu_table <- otu_table(trans_data_mat, taxa_are_rows = FALSE)
+
+
+#Confirm we have new sample sums in the millions (cells/mL)
+head(sample_sums(full_abs_physeq), 10)
+
+
+# Add new upwelling variable
+
+full_abs_physeq <- full_abs_physeq %>%
+  ps_mutate(Upwelling = case_when(
+    Rep_ID %in% c("September_38_E","September_38_B", "September_35_E", "September_35_M", "September_35_B", "September_717_M", 
+                  "May_29_M", "May_29_E", "May_48_B", "May_43_E", "May_29_B") ~ "Upwelling",
+    Rep_ID %in% c("May_17_E", "September_17_E", "September_17_B") ~ "Welland Canal",
+    Rep_ID %in% c("May_66_E","May_35_M","May_38_M","May_35_E","May_38_E","May_717_E") ~ "Downwelling",
+    TRUE ~ "Other")
+  )
+
+```
+
+```{r FIGURE-S8A, fig.height=4.5, fig.width=4.5}
+
+full_abs_physeq %>%
+  sample_data() %>%
+  data.frame() %>% 
+  ggplot(aes(x = temperature, y = avg_cells_per_ml/1e6)) + 
+  geom_point(size = 3, alpha = 0.8, stroke = 1,
+             aes(
+    color = Comp_Group_Hier_Colors, 
+    fill = Comp_Group_Hier_Colors, 
+    shape = Upwelling)) + 
+  scale_color_manual(values = comp_group_colors_hier,
+                   labels = c("Deep (May)",
+                                "Deep (September)",
+                                "Shallow May",
+                                "Shallow September"),
+                     name = "Depth and Month") + 
+  scale_fill_manual(values = comp_group_colors_hier, guide = "none") + 
+  scale_shape_manual(values = upwelling_shapes,
+                     name = "Status",
+                     breaks = c("Upwelling", "Downwelling", "Welland Canal")) + 
+  guides(shape = guide_legend(order = 2),
+         color = guide_legend(order = 1)) + 
+  labs(x = "Temperature (°C)", y = "Cells/mL (millions)") + 
+  theme(legend.justification.inside = c(1,0.01),
+        legend.position = "inside",
+        legend.spacing = unit(0,"cm"),
+        #legend.margin = unit(0.02,"cm"),
+        legend.key.spacing = unit(0,"cm"),
+        legend.box.background = element_blank()) + 
+  ggpubr::stat_cor(method = "spearman")
+
+```
+
+```{r FIGURE-S8B, fig.height = 3.25, fig.width = 3.25}
+
+diversity_df <- full_abs_physeq %>%
+  sample_data() %>%
+  data.frame()
+
+comparisons <- combn(1:4, 2, simplify = FALSE)[c(1,2,5,6)]
+
+# Testing differences
+range(diversity_df$avg_cells_per_ml)
+
+
+base_plot <- diversity_df %>%
+  ggplot(aes(x = str_replace(Comp_Group_Hier_Colors, "_", "\n"), y = avg_cells_per_ml/1e6, color = Comp_Group_Hier_Colors, fill = Comp_Group_Hier_Colors)) + 
+  stat_summary(geom = "errorbar", fun.min = median, fun.max = median, width = 0.5, linewidth = 2) + 
+  stat_summary(geom ="errorbar", 
+               fun.min = \(x)median(x)-sd(x), 
+               fun.max = \(x)median(x) + sd(x),
+               width = 0.2) + 
+  ggbeeswarm::geom_beeswarm(alpha = 0.8, cex = 3, aes(shape = Upwelling)) + 
+  scale_color_manual(values = comp_group_colors_hier, guide = "none") + 
+  scale_fill_manual(values = comp_group_colors_hier, guide = "none") +  
+   scale_shape_manual(values = upwelling_shapes,
+                     breaks = c("Upwelling", "Downwelling", "Welland Canal")) +  
+  scale_y_continuous(expand = expansion(mult = c(0,.1)), labels = scales::label_comma()) + 
+  scale_x_discrete(labels = c("May","September","May","September")) + 
+  labs(y = "Cells/mL (millions)") +
+  theme(axis.title.x = element_blank(),
+        strip.text = element_text(size = 12),
+        legend.position = "none") + 
+  stat_compare_means(comparisons = comparisons, label = "p.signif", size = 5, tip.length = 0, step.increase = .2)
+
+label_plots <- ggplot() + scale_x_continuous(limits = c(0.5, 4.5), breaks = c(1.5, 3.5), labels = c("Deep","Shallow"), position = "top") + 
+  theme(axis.line = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(size = 12))
+
+cell_box_plots <- base_plot / ( label_plots) + 
+  plot_layout(heights = c(20,1))
+
+cell_box_plots
+```
+
+# Calculate Distance Matrix
+
+The authors compared many distance matrices (if you're interested, feel free to contact us), but we settled on Generalized Unifrac (alpha = 0.5) using absolute abundances for most of our comparisons. This relies on a customized GUniFrac function, so make sure to install from the MarschmiLab source, rather than CRAN. 
+
+```{r abs_abund-bray-vs-wunifrac, fig.width = 14, fig.height = 7}
+
+# Distance object derived from absolute abundances - need to use modified GUniFrac to do so!
+
+absolute_wunifrac <- GUniFrac(otu.tab = as.matrix(otu_table(full_abs_physeq)), tree = phy_tree(full_diversity_physeq), alpha = c(0,0.5,1), normalize_counts = FALSE)
+
+save(absolute_wunifrac, file = "data/08_compositional_exports/absolute_wunifrac.RData")
+
+abs_unifrac_dist_0.5 <- as.dist(absolute_wunifrac$unifracs[, , "d_0.5"])
+
+```
+
+# Hierarchical clustering to define groups
+
+```{r FIGURE-S3A, fig.width=3, fig.height=9}
+
+wun_hclust <- abs_unifrac_dist_0.5 %>%
+  hclust(method = "average")
+
+dendrogram <- wun_hclust %>%
+  as.dendrogram() 
+
+# These next four lines switch two branches, purely for aesthetic reasons
+den_copy <- dendrogram
+den_copy[[1]] <- dendrogram[[2]]
+den_copy[[2]] <- dendrogram[[1]]
+dendrogram <- den_copy
+
+tip_annotation_df <- 
+  full_abs_physeq %>%
+  sample_data() %>%
+  data.frame() %>%
+  select(Comp_Group_Hier_Colors, Rep_ID, Upwelling)
+
+tip_groups <- data.frame(Rep_ID = dendro_data(dendrogram)$labels$label) %>%
+   left_join(tip_annotation_df)
+
+dend_data <- dendro_data(dendrogram)
+
+ggplot(dend_data$segments) + 
+  geom_segment(aes(x = x, y = y, xend = xend, yend = yend)) + 
+  geom_text(data = dend_data$labels, aes(x, y, label = label, color = tip_groups$Comp_Group_Hier_Colors),
+            hjust = 0, size = 2) + 
+    geom_point(data = dend_data$labels, aes(x, y = ifelse(tip_groups$Comp_Group_Hier_Colors == "Shallow_May", -0.5, -0.75), color = tip_groups$Comp_Group_Hier_Colors,fill = tip_groups$Comp_Group_Hier_Colors,  shape = tip_groups$Upwelling, alpha = tip_groups$Upwelling), size = 2) + 
+  theme_void() +
+  coord_flip() + 
+  scale_y_reverse(expand = expansion(mult = .5)) + 
+  scale_x_continuous(expand = expansion(mult = 0.1))+
+  scale_color_manual(values = comp_group_colors_hier) + 
+  scale_fill_manual(values = comp_group_colors_hier) + 
+  scale_shape_manual(values = upwelling_shapes) + 
+  scale_alpha_manual(values = c(0.8,0,0.8,0.8)) + 
+  theme(legend.position = "none")
+
+
+```
+
+We'll also make a "blank" dendrogram that will be used to structure the compositional plot (Figure 2D)
+```{r dendro_for_barplots}
+
+dendro_metadata <- full_diversity_physeq %>%
+  sample_data() %>%
+  data.frame() %>%
+  select(Rep_ID, Comp_Group_Hier, Comp_Group_Hier_Colors)
+
+dend_data_df <- dend_data$labels %>%
+  dplyr::rename(Rep_ID = label) %>%
+  left_join(dendro_metadata)
+  
+
+dendro_plot_for_barplots <- ggplot(dend_data$segments) + 
+  geom_segment(aes(x = y, y = x, xend = yend, yend = xend)) + 
+  geom_point(data = dend_data_df, aes(y, x, color = Comp_Group_Hier),
+             pch = 15, size = 3) + 
+  theme_void()+
+  scale_y_continuous(expand = expansion(mult = 0.01)) + 
+  scale_x_reverse(expand = expansion(mult = 0.02))+
+  scale_color_manual(values = comp_three_colors, "Depth and Month") + 
+  theme(legend.position = "none")
+
+```
+
+Let's define new comparative groups using this hierarchical tree
+
+```{r cutting-dendrogram}
+
+cut_results <- wun_hclust %>%
+  cutree(dendrogram, k = 3)
+  
+comp_cutresults <- case_match(cut_results, 1 ~ "Deep", 2 ~ "Shallow_May", 3 ~ "Shallow_September")
+
+cut_table <- tibble(
+  Rep_ID = names(cut_results),
+  Comp_Group_Hier = comp_cutresults
+) %>%
+  mutate(Comp_Group_Hier_Colors = case_when(Comp_Group_Hier=="Deep"&str_detect(Rep_ID, "May") ~ "Deep (May)",
+                                            Comp_Group_Hier=="Deep"&str_detect(Rep_ID, "September") ~ "Deep (September)",
+                                            TRUE ~ Comp_Group_Hier))
+
+save(cut_table, file = "data/08_compositional_exports/cut_table.RData")
+```
+
+By the time you'll read this...these comp groups will already be in our metadata dataframe (very meta, I know).
+
+# Nice, publishable ordination
+
+```{r scratch-ordination, fig.width = 7, fig.height = 7}
+
+w_unifrac_pcoa_abs_0.5 <- ordinate(
+    physeq = full_abs_physeq,
+    method = "PCoA",
+    distance = abs_unifrac_dist_0.5
+  )
+
+wun_pcoa_abs_hier <- plot_ordination(
+  physeq = full_abs_physeq,
+  ordination = w_unifrac_pcoa_abs_0.5,
+  color = "Comp_Group_Hier_Colors",
+  shape= "Upwelling") +
+  geom_point(size = 4, alpha = 0.8, aes(fill = Comp_Group_Hier_Colors)
+             ) + 
+  #stat_ellipse(aes(group = Comp_Group_Hier), linetype = 2) + 
+    scale_fill_manual(values = comp_group_colors_hier, guide = "none") + 
+    scale_shape_manual(values = upwelling_shapes) + 
+    scale_color_manual(values = comp_group_colors_hier) +
+  labs(color = "Depth and Month") + 
+  theme(legend.justification.inside = c(1,0.01),
+        legend.position = "inside",
+        legend.spacing = unit(0, "cm"))
+
+wun_pcoa_abs_hier
+
+```
+
+I do this plot first, and then I remake it from scratch with aesthetics that I like a little better:
+
+```{r, saving-theme}
+
+pcoa_theme <- ggplot2:::plot_theme(ggplot_build(wun_pcoa_abs_hier)$plot)
+
+```
+
+```{r, FIGURE-S3C, fig.width = 7, fig.height = 7}
+
+ord_df<- plot_ordination(
+  physeq = full_abs_physeq,
+  ordination = w_unifrac_pcoa_abs_0.5,
+  justDF = TRUE)
+
+
+ggplot(data = ord_df, 
+       aes(x = Axis.1, 
+           y = Axis.2,
+           fill = Comp_Group_Hier_Colors,
+           color = Comp_Group_Hier_Colors,
+           shape = Upwelling)) + 
+  geom_point(size = 5, alpha = 0.8, stroke = 1) +
+  pcoa_theme + 
+  scale_shape_manual(values = upwelling_shapes,
+                     breaks = c("Upwelling", "Downwelling","Welland Canal")) + 
+  scale_fill_manual(values = comp_group_colors_hier, guide = "none") +
+  scale_color_manual(values = comp_group_colors_hier) +
+  labs(color = "Depth and Month",
+       shape = "Status",
+       x = "Axis.1 [43.2%]",
+       y = "Axis.2 [19.9%]") + 
+  theme(legend.justification.inside = c(1,0.01),
+        legend.position = "inside",
+        legend.spacing = unit(0, "cm"),
+        legend.box.background = element_blank())
+
+```
+
+# PERMANOVA for our overall ordination
+
+Now, let's include the permanova result that essentially "matches" this ordination, so that they are close to together. 
+
+```{r permanova}
+
+set.seed(31491)
+
+sam_data_for_adonis <- data.frame(sample_data(full_abs_physeq))
+
+adonis2(abs_unifrac_dist_0.5 ~ Comp_Group_Hier, data = sam_data_for_adonis, by = "margin")
+
+```
+
+Here, we explain 55.47% of variation using these three groups, with a p-value of 0.001. 
+
+
+# Beta Dispersion for our overall ordination
+
+Next, we can beta dispersion across these three groups
+
+```{r betadisper}
+
+betadispr <- betadisper(abs_unifrac_dist_0.5, sam_data_for_adonis$Comp_Group_Hier)
+
+permutest(betadispr)
+
+permutest(betadispr, pairwise = TRUE)$pairwise
+
+```
+
+There is a significant difference in dispersion, in that Shallow September is highly clustered compared to the other two groups.
+
+# Clustering Surface Communites (Figure 1D)
+
+```{r FIGURE-S9A, fig.width = 5, fig.height = 5}
+
+# First, May
+surf_may <- full_abs_physeq %>%
+  ps_filter(month=="May", Depth_Class == "E")
+
+# Identify May Samples
+keeps <- sample_names(surf_may)
+
+# Filter our distance matrix just for Surface May samples
+temp_mat <- as.matrix(abs_unifrac_dist_0.5)
+
+all(colnames(temp_mat) == rownames(temp_mat))
+
+keep_i <- colnames(temp_mat) %in% keeps
+
+surf_may_dist <- as.dist(temp_mat[keep_i, keep_i])
+
+# Cluster
+surf_may_hclust <- surf_may_dist %>%
+  hclust(method = "average")
+
+# Define a height at which to cut the tree
+height = 0.32
+
+may_surf_groups <- cutree(surf_may_hclust, h = height)
+
+# Plot our dendrogram
+may_surf_d <- as.dendrogram(surf_may_hclust)
+
+data <- dendro_data(may_surf_d)
+
+may_clust_df <- data.frame(cluster = factor(may_surf_groups[match(data$labels$label,names(may_surf_groups))]),
+                           Rep_ID = data$labels$label)
+
+ggplot(segment(data)) + 
+  geom_segment(aes(x = x, y = y, xend = xend, yend = yend),
+               linewidth = 1) + 
+  coord_flip() + 
+  geom_text(data = may_clust_df, aes(label = Rep_ID, color = cluster, y = 0, x = c(1:15)), size = 5, hjust = 0) + 
+  scale_y_reverse(limits = c(.65, -.5)) +
+  theme(axis.title.y  = element_blank(),
+        axis.line.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10),
+        axis.line.x = element_line(linewidth  = 1),
+        axis.ticks.x = element_line(linewidth = 1),
+        legend.position = "none") + 
+  scale_color_manual(values = c("#211ed2","#ea8bb9","#79d3df","#ed8114")) + 
+  geom_hline(yintercept = 0.32, linetype = 2, size = 1)
+```
+
+
+```{r FIGURE-S9B, fig.width = 5, fig.height = 5}
+
+surf_sep <- full_abs_physeq %>%
+  ps_filter(month=="September", Depth_Class == "E")
+
+keeps <- sample_names(surf_sep)
+
+temp_mat <- as.matrix(abs_unifrac_dist_0.5)
+
+all(colnames(temp_mat) == rownames(temp_mat))
+
+keep_i <- colnames(temp_mat) %in% keeps
+
+surf_sep_dist <- as.dist(temp_mat[keep_i, keep_i])
+
+surf_sep_hclust <- surf_sep_dist %>%
+  hclust(method = "average")
+
+sep_surf_groups <- cutree(surf_sep_hclust, h = height)
+
+sep_surf_d <- as.dendrogram(surf_sep_hclust)
+
+data <- dendro_data(sep_surf_d)
+
+sep_clust_df <- data.frame(cluster = factor(sep_surf_groups[match(data$labels$label,names(sep_surf_groups))]),
+                           Rep_ID = data$labels$label)
+
+ggplot(segment(data)) + 
+  geom_segment(aes(x = x, y = y, xend = xend, yend = yend),
+               linewidth = 1) + 
+  coord_flip() + 
+  geom_text(data = sep_clust_df, aes(label = Rep_ID, color = cluster, y = 0, x = c(1:15)), size = 5, hjust = 0) + 
+  scale_y_reverse(limits = c(.65, -.5)) +
+  theme(axis.title.y  = element_blank(),
+        axis.line.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10),
+        axis.line.x = element_line(linewidth = 1),
+        axis.ticks.x = element_line(linewidth = 1),
+        legend.position = "none") + 
+  scale_color_manual(values = c("#64cb74","#f02fb3")) + 
+  geom_hline(yintercept = 0.32, linetype = 2, size = 1)
+
+```
+
+# PCA of Environmental Metadata
+
+How do our stations cluster based on metadata? Below, I select numerical metadata from each station and use a PCA to plot stations based on their environmental characteristics. 
+
+It took a lot of work to make the PCA and PCoA look the same, haha, but I think it was worth it.
+
+```{r FIGURE-S3B, fig.width=7, fig.height=7}
+
+# Select our environmental metadata
+metadata_df <- full_abs_physeq %>%
+  sample_data() %>%
+  data.frame() %>%
+  select(good_oxygen, upoly, par, fluorescence, temperature, NH4:chl_a, Rep_ID, Comp_Group_Hier_Colors, Upwelling) %>%
+  dplyr::filter(!if_any(everything(), is.na))
+
+# Filter just for numerical metadata for the PCA
+numerical_metadata <- metadata_df %>%
+  select_if(negate(is.factor)) %>%
+  select_if(is.numeric)
+
+# Run PCA - centering occurs by default
+pca_res <- prcomp(numerical_metadata, scale. = TRUE)
+
+# Run an envfit on PCA to identify significant vectors
+ef <- envfit(pca_res, numerical_metadata)
+
+# Filter for sig vectors, and make nice names
+loading_df <- data.frame(ef$vectors$arrows) %>%
+  cbind(r = ef$vectors$r) %>%
+  cbind(p = ef$vectors$pvals) %>%
+  filter(r > 0.5, p <0.05) %>%
+  tibble::rownames_to_column("Variable") %>%
+    mutate(Variable = c("Oxygen", 
+                      "Turbidity",
+                      "Fluorescence",
+                      "Temperature",
+                      "NOx",
+                      "TN",
+                      "Ca",
+                      "Mg",
+                      "Si",
+                      "Chlorophyll-a"))
+
+# Pull out sample points from PCA for manual plotting
+point_df <- data.frame(x = pca_res$x[,1],
+                       y = pca_res$x[,2],
+                       Rep_ID = rownames(pca_res$x)) %>%
+  left_join(metadata_df)
+
+# Find variance fom each axis for axis labels
+
+variance <- summary(pca_res)$importance[2,][1:2] * 100
+
+variance <- round(variance, digits = 1)
+
+# Plot PCA!
+env_pca <- ggplot(data = point_df, aes(x=x, y=y, color = Comp_Group_Hier_Colors)) + 
+  geom_segment(data = loading_df, aes(xend = PC1, yend = PC2, x = 0, y = 0), color = "grey80",
+               arrow = arrow(length = unit(0.1, "inches"))) + 
+  geom_text(data = loading_df, aes(x = PC1*1.6, y = PC2*1.6, label = Variable), color = "grey80", size = 3) + 
+  geom_point(size = 5, alpha = 0.8, stroke = 1, aes(shape = Upwelling, fill = Comp_Group_Hier_Colors)) + 
+  labs(x = paste0("Axis.1 [",variance[1],"%]"), y = paste0("Axis.2 [",variance[2],"%]"),
+       color = "Depth and Month", shape = "Status") +
+  pcoa_theme + 
+  scale_shape_manual(values = upwelling_shapes,
+                     breaks = c("Upwelling", "Downwelling","Welland Canal")) + 
+  scale_fill_manual(values = comp_group_colors_hier, guide = "none") +
+  scale_color_manual(values = comp_group_colors_hier) +
+  theme(legend.justification.inside = c(1,0.01),
+        legend.position = "inside",
+        legend.spacing = unit(0, "cm"),
+        legend.box.background = element_blank())
+
+env_pca
+
+```
+
+# Absolute Abundance Plots
+
+Here, we plot taxonomic abundance barplots at the class level
+
+```{r FIGURE-2D, fig.width = 7, fig.height=8}
+
+class_df_abs <- 
+  full_abs_physeq %>%
+  speedyseq::relocate_tax_table(ASV, .after = last_col()) %>%
+  speedyseq::tax_glom(taxrank = "Class") %>%      # Agglomerate/merge counts by class using faster function
+  psmelt() %>%                                         # melt into long format data frame 
+  mutate(Class = case_when(is.na(Class)~"Other",
+                            TRUE ~ Class)) # Deal with NAs
+
+# Here, I find which taxa are abundant enough that we can see them in the plot, and so are worth assigning colors
+abund_taxa_abs <- class_df_abs %>%
+  group_by(Class) %>%
+  mutate(rare_c = max(Abundance) < 100000) %>%
+  filter(!rare_c) %>%
+  pull(Class) %>% unique()
+
+# This is the order of samples in our dendrogram
+rep_order <- dend_data$labels$label
+
+class_barplot_abs <- class_df_abs %>%
+  select(Class, Abundance, Comp_Group_Hier, Rep_ID) %>%
+  mutate(Class = ifelse(Class %in% abund_taxa_abs, Class, "Rare"),
+          Class = factor(Class, levels = names(class_colors))) %>%  # Mark rare taxa
+  group_by(Class, Rep_ID, Comp_Group_Hier) %>%
+  summarize(Abundance = sum(Abundance)) %>%
+  ungroup() %>% 
+  mutate(Rep_ID = factor(Rep_ID, levels = rep_order)) %>%
+  ggplot(aes(y = Rep_ID, x = Abundance/1e6, fill = Class)) + 
+  geom_bar(stat="identity") +
+  scale_fill_manual(values = class_colors) + 
+  scale_x_continuous(expand = expansion(mult = 0),
+                     labels = scales::label_comma()) + 
+  labs(x = "Abundance (million cells/mL)") + 
+  theme(axis.line.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank(),
+        plot.margin = unit(c(0,0,0,0), "null"),
+        axis.text.x = element_text(size = 10),
+        axis.title.x = element_text(size = 12),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 20)) + 
+  guides(fill = guide_legend(ncol = 1))
+
+# This is the set of labels (Deep, Shallow May, Shallow September) which floats alongside
+labels <- ggplot(data = data.frame(),
+       aes(y = c(0, 37, 72),
+           x = 0,
+           label = c("Shallow September","Shallow May", "Deep"))) + 
+  geom_text(color = comp_three_colors[c(2,1,3)],
+            angle = 90,
+            size = 6,
+            fontface = "bold") + 
+  theme_void() + 
+  scale_y_continuous(expand = expansion(mult = .3))
+
+
+# This puts together our labels, our dendrogram, and our barplot
+class_abs_abund <- labels + dendro_plot_for_barplots + class_barplot_abs + 
+  plot_layout(widths = c(.5,.5,8), ncol = 3)
+
+
+class_abs_abund
+
+```
+
+# Absolute Most abundant ASVs
+
+```{r FIGURE-S12B, fig.width = 6, fig.height = 6}
+
+# Make a dataframe with every ASV's abundance
+asv_melted <- full_abs_physeq %>%
+  psmelt()
+
+
+annotations <- asv_melted %>%
+  mutate(Species = case_when(!is.na(Species)~Species,
+                             is.na(Species)&(!is.na(Genus))~paste(Genus, "sp."),
+                             TRUE~paste("Unknown sp."))) %>% # Rename NAs
+  select(ASV, Phylum, Class,Species) %>%
+  unique() %>% # Collapse multiple zeros
+  mutate(Species = case_when(ASV == "ASV_3"~"CL500-11", # We blasted this ASV and it matched CL500-11 the best
+                             TRUE ~ Species))
+
+asv_melted %>%
+  select(ASV, Rep_ID, Abundance) %>%
+  group_by(ASV) %>%
+  summarize(Prevalence = sum(as.numeric(Abundance > 0)) / n(),
+            Max_Abundance = max(Abundance)
+            ) %>%
+  left_join(annotations) %>%
+  filter(Max_Abundance > 5e4) %>% # Zoom into the most abundance ASVs
+  ggplot(aes(x = Prevalence, y = Max_Abundance, color = Class)) + 
+  geom_point() + 
+  geom_text_repel(aes(label = Species), size = 3)  +
+  scale_y_continuous(transform = "log10", labels = scales::label_comma())+ 
+  scale_x_continuous(limits = c(0, 1.25),
+                     breaks = c(0,0.5, 1)) +
+  scale_color_manual(values = class_colors) + 
+  labs(y = "Maximum Cell Count (cells/mL)", y = "Prevalence") +
+  theme(legend.position = "none")
+
+```
+
+Here I do the same thing as above, but without an abundance cutoff. This means that we can't really see specific species anymore, but can evalute the overall distributions of ASVs (and support our claim that we didn't observe very many conditionally rare taxa). 
+
+```{r FIGURE-S12A, fig.width=8, fig.height=7}
+
+all_asvs <- asv_melted %>%
+  select(ASV, Rep_ID, Abundance) %>%
+  group_by(ASV) %>%
+  summarize(Prevalence = sum(as.numeric(Abundance > 0)) / n(),
+            Max_Abundance = max(Abundance)
+            ) %>%
+  left_join(annotations) %>%
+  mutate(Class = ifelse(Max_Abundance > 10000, Class, "Rare"),
+         Class = ifelse(is.na(Class), "Unidentified",Class)) %>%
+  ggplot(aes(x = Prevalence, y = Max_Abundance, color = Class)) + 
+  geom_point() +
+  scale_y_continuous(transform = "log10", labels = scales::label_comma())+ 
+  scale_x_continuous(limits = c(0, 1.25),
+                     breaks = c(0,0.5, 1)) +
+  scale_color_manual(values = class_colors) + 
+  labs(y = "Maximum Cell Count (cells/mL)", y = "Prevalence") + 
+  guides(color = guide_legend(
+    title = "Class",
+    ncol = 1,
+    override.aes = aes(label = "")
+  )) + 
+  annotate(geom = "rect", xmin = -Inf, xmax = Inf, ymin = 5e4, ymax = Inf,
+           fill = NA, color = "grey")
+
+all_asvs
+
+```
+
+# Highlighting Specific Taxa (Figures S10A and S15)
+
+## Highlighting acI-C2 (Fig. S15)
+
+Quick digression - here we'll highlight how acI-C2 is only found in warm Shallow September.
+
+```{r FIGURE-S15-with-pvals, fig.width = 6, fig.height = 4}
+
+asv_melted %>%
+  filter(Species == "acI-C2") %>%
+  ggplot(aes(x = Comp_Group_Hier, y = Abundance, color = Comp_Group_Hier)) + 
+  geom_boxplot() +
+  ggbeeswarm::geom_beeswarm() + 
+  scale_y_continuous(labels = scales::label_comma()) + 
+  scale_color_manual(values = comp_three_colors) + 
+  ggpubr::stat_compare_means(comparisons = list(c(1,2), c(1,3), c(2,3))) + 
+  labs(x = "", y = "Abundance of acI-C2 (cells/mL") + 
+  theme(legend.position = "none")
+
+```
+
+Now I remake the figure, without the actual stats values, which I report in the text.
+
+```{r FIGURE-S15, fig.width = 6, fig.height = 4}
+
+asv_melted %>%
+  filter(Species == "acI-C2") %>%
+  ggplot(aes(x = Comp_Group_Hier, y = Abundance, color = Comp_Group_Hier)) + 
+  geom_boxplot() +
+  ggbeeswarm::geom_beeswarm() + 
+  scale_y_continuous(labels = scales::label_comma(),
+                     expand = expansion(c(0.01,0.1))) + 
+  scale_color_manual(values = comp_three_colors) + 
+  ggpubr::stat_compare_means(comparisons = list(c(1,2), c(1,3), c(2,3)),
+                             label = "p.signif") + 
+  labs(x = "", y = "Abundance of acI-C2 (cells/mL)") + 
+  theme(legend.position = "none")
+
+```
+
+## Highlighting Deep Taxa in Upwelling (Fig. S10A)
+
+```{r FIGURE-S10A-with-pvals, fig.width = 9, fig.height = 3}
+
+asv_melted %>%
+  filter(Comp_Group_Hier_Colors %in% c("Deep (September)", "Shallow_September")) %>%
+  mutate(Comp_Group_Hier_Colors = ifelse(Rep_ID%in%c("September_38_E","September_35_E", "September_38_B", "September_35_M","September_35_B"), "Sept. Upwelling", Comp_Group_Hier_Colors)) %>%
+  filter(Class %in% c("Nitrospiria","Anaerolineae", "Cyanobacteriia")) %>%
+  group_by(Class, Rep_ID, Comp_Group_Hier_Colors) %>%
+  summarize(Sum_Abund = sum(Abundance)) %>%
+  ungroup() %>%
+  ggplot(aes(x = Comp_Group_Hier_Colors, y = Sum_Abund, color = Comp_Group_Hier_Colors)) + 
+  geom_boxplot() + 
+  geom_jitter(size = 2, alpha = .5, width = 0.2) + 
+  facet_wrap(~Class, scales = "free_y", ncol = 3) + 
+  scale_y_log10(labels = scales::label_comma()) + 
+  scale_color_manual(values = c("#990006","#864F8F", "#625D0A")) + 
+  labs(y = "Absolute Abundance (cells / mL)") + 
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = -45, hjust= 0, vjust = 0),
+        axis.title.x = element_blank()) + 
+  ggpubr::stat_compare_means(comparisons = list(c(1,2),c(2,3)))
+```
+
+
+```{r FIGURE-S10A, fig.width = 9, fig.height = 3}
+
+asv_melted %>%
+  filter(Comp_Group_Hier_Colors %in% c("Deep (September)", "Shallow_September")) %>%
+  mutate(Comp_Group_Hier_Colors = ifelse(Rep_ID%in%c("September_38_E","September_35_E", "September_38_B", "September_35_M","September_35_B"), "Sept. Upwelling", Comp_Group_Hier_Colors)) %>%
+  filter(Class %in% c("Nitrospiria","Anaerolineae", "Cyanobacteriia")) %>%
+  group_by(Class, Rep_ID, Comp_Group_Hier_Colors) %>%
+  summarize(Sum_Abund = sum(Abundance)) %>%
+  ungroup() %>%
+  ggplot(aes(x = Comp_Group_Hier_Colors, y = Sum_Abund, color = Comp_Group_Hier_Colors)) + 
+  geom_boxplot() + 
+  geom_jitter(size = 2, alpha = .5, width = 0.2) + 
+  facet_wrap(~Class, scales = "free_y", ncol = 3) + 
+  scale_y_log10(labels = scales::label_comma(),
+                expand = expansion(0.1)) + 
+  scale_color_manual(values = c("#990006","#864F8F", "#625D0A")) + 
+  labs(y = "Absolute Abundance (cells / mL)") + 
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = -30, hjust= .5, vjust = .2, size = 8),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 9),
+        strip.text = element_text(size = 10)) + 
+  ggpubr::stat_compare_means(comparisons = list(c(1,2),c(2,3)), label = "p.signif")
+
+```
+
+
+# Exploring Unique Taxa and Unique Interactions
+
+First, we look at the ASV abundance distributions at different stations (near, or apart, from upwellings or the Welland Canal)
+
+```{r FIGURE-S11A, fig.width = 6.5, fig.height=2.5}
+
+asv_df_rel <- 
+  full_abs_physeq %>%
+  transform_sample_counts(function(x) {x/sum(x)}) %>% # Convert to relative abundances
+  psmelt()
+
+asv_df_rel %>%
+  filter(Station_ID %in% c(12, 17, 35, 43, 29), 
+         month == "May",
+         Depth_Class == "E") %>%
+  mutate(Station_ID = paste("Station", Station_ID),
+         Station_ID = factor(Station_ID, levels = c("Station 17", "Station 29", "Station 43", "Station 12", "Station 35"))) %>%
+  ggplot(aes(x = log10(Abundance))) + 
+  geom_histogram() + 
+  facet_wrap(~Station_ID, nrow = 1) + 
+  labs(x = bquote(log[10]~(Relative~Abundance~of~ASV)), y = "Count")
+```
+
+Repeat for September
+
+```{r FIGURE-S11B, fig.width = 6.5, fig.height=2.5}
+
+asv_df_rel %>%
+  filter(Station_ID %in% c(35, 38, 717, 41, 17), 
+         month == "September",
+         Depth_Class == "E") %>%
+  mutate(Station_ID = paste("Station", Station_ID),
+         Station_ID = factor(Station_ID, levels = c("Station 38", "Station 35", "Station 17", "Station 41", "Station 717"))) %>%
+  ggplot(aes(x = log10(Abundance))) + 
+  geom_histogram() + 
+  facet_wrap(~Station_ID, nrow = 1) + 
+  labs(x = bquote(log[10]~(Relative~Abundance~of~ASV)), y = "Count")
+
+```
+
+Now, I plot the taxonomic composition of the samples I showed above, but only of ASVs which had a relative abundance *less than 0.0001*! There's a lot of code to tweak the ordering and aesthetics.
+
+```{r FIGURE-S11C, fig.width = 8, fig.height = 10}
+
+rare_physeq <- 
+  full_abs_physeq %>%
+  transform_sample_counts(function(x) {x/sum(x)}) %>% 
+  psmelt() %>%
+  filter(Abundance < 0.0001) %>%
+  group_by(ASV) %>%
+  filter(sum(Abundance) > 0) %>%
+  ungroup()
+
+rare_rel_abund <- rare_physeq %>%
+  select(Station_ID, Rep_ID, month, Abundance, Depth_Class, Phylum:Species) %>%
+  filter(Abundance > 0) %>%
+  group_by(Rep_ID) %>%
+  mutate(Rel_Rare_Abund = Abundance / sum(Abundance)) %>%
+  ungroup() 
+
+rare_rel_abund %>%
+  filter(Depth_Class == "E", 
+         month == "September" & Station_ID %in% c(35, 38, 717, 41, 17)|month == "May" & Station_ID %in% c(17, 35, 12, 29, 43)) %>%
+  mutate(Phylum = ifelse(Phylum == "Proteobacteria",Class, Phylum)) %>%
+  group_by(Phylum, Rep_ID, month) %>%
+  summarize(Phyl_Abund = sum(Rel_Rare_Abund)) %>%
+  mutate(Phylum = case_when(is.na(Phylum) ~"Unidentified",
+                            Phyl_Abund < 0.02~"Rare",
+                            TRUE ~ Phylum),
+         Phylum = factor(Phylum),
+         Phylum = fct_relevel(Phylum, "Rare", after = Inf),
+         Phylum = fct_relevel(Phylum, "Unidentified", after = Inf),
+         Rep_ID = factor(Rep_ID, levels = c("May_17_E",
+                                            "May_29_E",
+                                            "May_43_E",
+                                            "May_12_E",
+                                            "May_35_E",
+                                            "September_38_E",
+                                            "September_35_E",
+                                            "September_717_E",
+                                            "September_41_E",
+                                            "September_17_E"))
+              
+)  %>% 
+  ggplot(aes(y = Rep_ID, x = Phyl_Abund, fill = Phylum)) + 
+  geom_col() + 
+  scale_fill_manual(values = rare_phylum_colors) + 
+  facet_wrap(~month, nrow = 2, scales = "free_y") + 
+  labs(x = expression("Relative Abundance of Phylum"~italic(within~rare~taxa)),
+       y = "Sample",
+       fill = "Phylum (or Class)") + 
+  theme(strip.text = element_blank()) + 
+  guides(fill = guide_legend(ncol = 1))
+
+```
+
+# Identifying ASVs Unique to Upwelling Stations
+
+```{r FIGURE-S10B, fig.width = 5, fig.height=5}
+
+# The trans stands for "transient"
+trans_taxa <- asv_melted %>%
+  filter(Abundance > 0) %>%
+  count(OTU) %>%
+  filter(n <= 1) %>%  # Find ASVs which are only observed in one sample
+  pull(OTU)
+
+asv_melted %>%
+  filter(Abundance > 0) %>%
+  filter(OTU %in% trans_taxa) %>%
+  count(Rep_ID) %>%
+  arrange(desc(n)) %>%
+  slice_head(n = 20) %>% # Only choose the top 20 samples with the most "unique" taxa
+  mutate(Rep_ID = factor(Rep_ID),
+         Rep_ID = fct_reorder(Rep_ID, n)) %>%
+  ggplot(aes(x = n, y = Rep_ID, label = Rep_ID, xend = 0)) + 
+  geom_segment(arrow = arrow(ends = "first", length = unit(0.1, "cm"))) + 
+  geom_text(hjust = -0.1) + 
+  scale_x_continuous(expand = expansion(c(0.1,0.5))) + 
+  labs(x = "Number of ASVs Unique to Station") + 
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.line.y = element_blank(),
+        axis.ticks.y = element_blank())
+
+```
+
+Next, we look for unique interactions (pairs of ASVs only seen in one sample)
+
+```{r FIGURE-S10C, fig.width = 5, fig.height=5}
+
+pairs <- asv_melted %>%
+  filter(Abundance > 1e3) %>% # Set a minimum abundance threshold
+  select(Rep_ID, ASV) %>%
+  group_by(Rep_ID) %>%
+  reframe(A1 = t(combn(ASV, 2))) %>% # Make a row for EVERY combination of ASV in each Rep_ID
+  rowwise() %>%
+  mutate(pair_key = paste(sort(A1), collapse = ":")) %>% # Make a pair_key, which is each ASV name pasted together, but in alphabetical order (to prevent duplicates)
+  ungroup()
+
+trans_interactions <- pairs %>%
+  count(pair_key) %>%
+  filter(n == 1) %>% # Find interactions that only occur in one sample
+  pull(pair_key)
+
+pairs %>%
+  filter(pair_key %in% trans_interactions) %>%
+  count(Rep_ID) %>%
+  arrange(desc(n)) %>%
+  slice_head(n = 20) %>% # Same as above - select 20 samples with most unique interactions
+  mutate(Rep_ID = factor(Rep_ID),
+         Rep_ID = fct_reorder(Rep_ID, n)) %>%
+  ggplot(aes(x = n, y = Rep_ID, label = Rep_ID, xend = 0)) + 
+  geom_segment(arrow = arrow(ends = "first", length = unit(0.1, "cm"))) + 
+  geom_text(hjust = -0.1) + 
+  scale_x_continuous(expand = expansion(c(0.1,0.5))) + 
+  labs(x = "Number of Co-occuring ASVs Unique to Sample") + 
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.line.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+
+# Saving out relevant objects for spatial analysis
+
+```{r saving-objects}
+save(full_abs_physeq, file = "data/08_compositional_exports/full_abs_physeq.RData")
+```
+
+```{r session-info}
+
+sessioninfo::session_info()
+
+```

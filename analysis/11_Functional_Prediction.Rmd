@@ -1,0 +1,196 @@
+---
+title: "Functional_Prediction" 
+author: "Augustus Pendleton"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: show
+    highlight: default
+    keep_md: yes
+    theme: journal
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+      toc_depth: 3
+editor_options: 
+  chunk_output_type: console
+---
+<style>
+pre code, pre, code {
+  white-space: pre !important;
+  overflow-x: scroll !important;
+  word-break: keep-all !important;
+  word-wrap: initial !important;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+# For width of code chunks and scroll bar 
+options(width=250)
+
+options(getClass.msg=FALSE)
+
+knitr::opts_chunk$set(eval = TRUE, 
+                      echo = TRUE, 
+                      include = TRUE,
+                      warning = FALSE,
+                      collapse = FALSE,
+                      message = FALSE,
+                      dpi=300, dev = "png",
+                      engine = "R", # Chunks will always have R code, unless noted
+                      error = TRUE,
+                      fig.path="../figures/11_functional_analysis/",  
+                      fig.align = "center") 
+
+```
+
+# Load packages 
+```{r load-packages}
+# Efficiently load packages 
+pacman::p_load(phyloseq, tidyverse, install = FALSE)
+
+knitr::write_bib(file = "data/11_functional_exports/packages.bib")
+
+# load in functions and color preferences
+source("code/R/plotting_aesthetics.R")
+
+```
+
+
+# Load Data
+
+```{r load_diversty_physeq}
+load("data/08_compositional_exports/full_abs_physeq.RData")
+```
+
+
+## Functional annotation with FAPROTAX
+
+Remember for bash chunks, always begin in the project root directory - I'll be explicit with cd if I'm navigating elsewhere
+
+```{r downloading-faprotax, engine = "bash", engine.opts = "l", eval = FALSE}
+
+cd data/11_functional_exports/faprotax
+
+wget https://pages.uoregon.edu/slouca/LoucaLab/archive/FAPROTAX/SECTION_Download/MODULE_Downloads/CLASS_Latest%20release/UNIT_FAPROTAX_1.2.10/FAPROTAX_1.2.10.zip
+
+unzip FAPROTAX_1.2.10.zip
+```
+
+```{r output-for-faprotax}
+
+# We will do this with cell-abundance normalized counts, going in. 
+# We are using the silva assignments; as it is the normalized taxonomy used by FAPROTAX (though it makes almost no difference)
+
+both <- read_tsv("data/02_taxonomy_exports/ASV_both_taxonomy.tsv")
+
+tax_names <- both %>%
+  mutate(taxonomy = paste(Kingdom, Phylum, Class, Order, Family, Genus, Species, sep = "; ")) %>%
+  select(ASV, taxonomy)
+
+input_table <- full_abs_physeq %>%
+  otu_table %>%
+  psmelt() %>%
+  pivot_wider(names_from = Sample, values_from = Abundance) %>%
+  dplyr::rename(ASV = OTU) %>%
+  left_join(tax_names)
+
+
+write_tsv(input_table, file = "data/11_functional_exports/faprotax/input_table.tsv")
+
+```
+
+```{r running-faprotax, engine = "bash", engine.opts = "l", eval = FALSE}
+
+# CONFIRM YOU ARE IN THE faprotax DIRECTORY!
+
+mkdir -p faprotax_outputs
+
+conda create -n "python_for_faprotax" python=3.7.6 ipython
+
+conda activate python_for_faprotax
+conda install numpy
+
+FAPROTAX_1.2.10/collapse_table.py -i input_table.tsv -g FAPROTAX_1.2.10/FAPROTAX.txt -d taxonomy --omit_columns 0 -f -o faprotax_outputs/func_table.tsv -r faprotax_outputs/fapro_report.txt
+
+cd ../../../
+
+```
+
+How many taxa were assigned at least one function?
+
+```{r reading-faprotax-report}
+
+readLines("data/11_functional_exports/faprotax/faprotax_outputs/fapro_report.txt")[107]
+
+readLines("data/11_functional_exports/faprotax/faprotax_outputs/fapro_report.txt")[108]
+
+```
+
+This is an important caveat here - so many taxa are unannotated!
+
+# Writing out select FAPROTAX functions for plotting in QGIS
+
+We don't do any visualization in R here - hence the writing out. 
+
+```{r reading-and-writing-fapro-results}
+
+fapro_res <- read_tsv(file = "data/11_functional_exports/faprotax/faprotax_outputs/func_table.tsv")
+
+by_rep_fapro <- fapro_res %>%
+  pivot_longer(!group, names_to = "Rep_ID", values_to = "Count") %>%
+  group_by(group) %>% # Group by functional annotation
+  dplyr::filter(any(Count!=0)) %>% # Get rid of any groups that are all zero
+  ungroup()
+
+for_join <- sample_data(full_abs_physeq) %>%
+  data.frame() %>%
+  select(Rep_ID, Comp_Group_Hier)
+
+semi_clean_fapro <- by_rep_fapro %>%
+  left_join(sample_data(full_abs_physeq) %>%
+  data.frame() %>%
+  select(Rep_ID, month, Depth_Class, Latitude, Longitude)) %>%
+  filter(Depth_Class!= "M") %>%
+  filter(group %in% c("methanotrophy","aerobic_ammonia_oxidation", "sulfate_respiration","photoautotrophy")) %>%
+  pivot_wider(names_from = "group", values_from = "Count")
+
+semi_clean_fapro %>%
+  sf::st_as_sf(coords = c("Longitude","Latitude"), crs = "EPSG:4326") %>%
+  filter(month == "September", Depth_Class == "B") %>%
+  sf::st_transform(crs = "EPSG:3174")%>%
+  sf::st_write("analysis/QGIS_Work/sep_b_mt.gpkg",
+               append = FALSE)
+
+semi_clean_fapro %>%
+  sf::st_as_sf(coords = c("Longitude","Latitude"), crs = "EPSG:4326") %>%
+  filter(month == "September", Depth_Class == "E") %>%
+  sf::st_transform(crs = "EPSG:3174")%>%
+  sf::st_write("analysis/QGIS_Work/sep_e_mt.gpkg",
+               append = FALSE)
+
+semi_clean_fapro %>%
+  sf::st_as_sf(coords = c("Longitude","Latitude"), crs = "EPSG:4326") %>%
+  filter(month == "May", Depth_Class == "B") %>%
+  sf::st_transform(crs = "EPSG:3174")%>%
+  sf::st_write("analysis/QGIS_Work/may_b_mt.gpkg",
+               append = FALSE)
+
+semi_clean_fapro %>%
+  sf::st_as_sf(coords = c("Longitude","Latitude"), crs = "EPSG:4326") %>%
+  filter(month == "May", Depth_Class == "E") %>%
+  sf::st_transform(crs = "EPSG:3174")%>%
+  sf::st_write("analysis/QGIS_Work/may_e_mt.gpkg",
+               append = FALSE)
+
+```
+
+# Session Info
+
+```{r session-info}
+
+sessioninfo::session_info()
+
+```

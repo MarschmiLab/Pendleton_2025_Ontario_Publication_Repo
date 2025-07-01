@@ -1,0 +1,470 @@
+---
+title: "Collating Metadata"
+author: "Augustus Pendleton"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: show
+    highlight: default
+    keep_md: yes
+    theme: journal
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+      toc_depth: 3
+editor_options: 
+  chunk_output_type: console
+---
+<style>
+pre code, pre, code {
+  white-space: pre !important;
+  overflow-x: scroll !important;
+  word-break: keep-all !important;
+  word-wrap: initial !important;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+# For width of code chunks and scroll bar 
+options(width=250)
+
+knitr::opts_chunk$set(eval = TRUE, 
+                      echo = TRUE, 
+                      include = TRUE,
+                      warning = FALSE,
+                      collapse = FALSE,
+                      message = FALSE,
+                      dpi=300, dev = "png",
+                      engine = "R", # Chunks will always have R code, unless noted
+                      error = TRUE,
+                      fig.path="../figures/05_Metadata_Curation/",  
+                      fig.align = "center") 
+
+```
+
+# Purpose of this document
+
+The previous three steps worked to clean our 16S data, assign taxonomy, remove contamination and assess accuracy. In the next steps, we start generating actual "results", including measures of alpha diversity and beta diversity. It will be necessary for us to correlate these measures to metadata we've collected (stored in our centralized metadata logs) as well as the various chemical and physical measures collected by the EPA. This will require the curation, cleaning, and joining of numerous data streams, and will also result in figures relevant to the paper, including CTD profiles, PCAs between sites, and mapping set-ups. 
+
+
+## Loading our current metadata
+
+```{r data-load}
+
+# Efficiently load packages 
+pacman::p_load(phyloseq, iNEXT, tidyverse, readxl, ggpubr, scales, patchwork, install = FALSE)
+
+knitr::write_bib(file = "data/05_metadata_exports/packages.bib")
+
+source("code/R/plotting_aesthetics.R")
+
+load("data/04_cytometry_exports/meta_with_ccs.RData")
+
+meta_track2 <- meta_with_ccs %>%
+    mutate(Depth_Class = factor(Depth_Class, levels = c("E","M","B")),
+         Depth_Range = case_when(Deployment_Depth_m <=10 ~ "< 10 m",
+                               Deployment_Depth_m <=20 ~ "10-20 m",
+                               Deployment_Depth_m <=30 ~ "20-30 m",
+                               Deployment_Depth_m <=40 ~ "30-40 m",
+                               Deployment_Depth_m <=100 ~ "40-100 m",
+                               Deployment_Depth_m >100 ~ ">100 m"),
+         Depth_Range = factor(Depth_Range, levels = c("< 10 m", "10-20 m","20-30 m", "30-40 m", "40-100 m",">100 m")))
+
+```
+
+## Bringing in SeaBird CTD Data
+
+CTD data was shared with us from the EPA and the raw files live in AAH_ONT_2023/External_Data/202305_SeabirdData and AAH_ONT_2023/External_Data/202310_SeabirdData. Descriptions of how those data were accessed, cleaned, and converted to dataframe compatible csvs are described in AAH_ONT_2023/External_Data/Cleaning_CNV_Files.R. Note that anomalous and extreme negative conductivity values at one or two depths would cause parsing issues for each sample; as such, these values were manually removed in a text editor before being read into R. 
+
+```{r read-ctd}
+may_ctd <- read_csv("data/05_metadata_exports/SeabirdData/202305_SeabirdData/Combined_CTD_Data_OurStations.csv")
+
+sep_ctd <- read_csv("data/05_metadata_exports/SeabirdData/202310_SeabirdData/Combined_CTD_Data_OurStations.csv")
+
+may_other_ctd <- read_csv("data/05_metadata_exports/SeabirdData/202305_SeabirdData/Combined_CTD_Data_OtherStations.csv")
+
+sep_other_ctd <- read_csv("data/05_metadata_exports/SeabirdData/202310_SeabirdData/Combined_CTD_Data_OtherStations.csv")
+```
+
+## Bringing in EPA Chem Analyses
+
+```{r read-chemistry}
+minimum_detection_limits <- read_excel("data/05_metadata_exports/2023_LakeOntario_ChemWQ_Final.xlsx", sheet = "detection limits") %>%
+  slice_head(n = 1) %>%
+  select(where(is.numeric)) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "MDL") %>%
+  separate_wider_delim(Variable, names = c("Variable", "Unit"), delim = " ", too_many = "merge") %>%
+  mutate(Unit = str_trim(Unit))
+
+epa_chem <- read_excel("data/05_metadata_exports/2023_LakeOntario_ChemWQ_Final.xlsx", sheet = "DetLimitCorr") %>%
+  mutate(Depth_Class = case_when(`Depth Strata` == "Epi" ~ "E",
+                                 `Depth Strata` == "Hypo/B2" ~ "B",
+                                 `Depth Strata`%in%c("Fmax","Mid") ~ "M"), # Convert their Depth Strata to our Depth classes
+         Depth_Class = factor(Depth_Class, levels = c("E","M","B")),
+         Site = as.character(Site)) %>% # Convert station to character
+  select(month = Month, Station_ID = Site, Chem_Depth = `Separate depths (m)`, Depth_Class, is_Fmax = `Fmax seen?`, is_stratified = `Stratified/ Unstratified?`, `NH4 ug N/L`:`chl-a    ug/L`, EPA_Comments = Comments) %>%
+  filter(!is.na(Station_ID)) %>%
+  mutate(across(`NH4 ug N/L`:`chl-a    ug/L`, as.numeric)) %>%
+  pivot_longer(`NH4 ug N/L`:`chl-a    ug/L`, names_to = "Variable", values_to = "Variable_Value") %>%
+   filter(!is.na(Variable_Value)) %>%
+   separate_wider_delim(Variable, names = c("Variable", "Unit"), delim = " ", too_many = "merge") %>%
+  mutate(Unit = str_trim(Unit)) 
+
+epa_units <- epa_chem %>%
+  select(Variable, Unit) %>%
+  unique()
+
+write_csv(epa_units, file = "data/05_metadata_exports/units.csv")
+
+clean_epa_chem <- epa_chem %>%
+  select(-Unit) %>%
+  pivot_wider(names_from = "Variable", values_from = "Variable_Value") %>%
+  janitor::clean_names(case = "none") %>%
+  mutate(Station_ID = as.numeric(Station_ID)) %>%
+  mutate(SRP = ifelse(SRP < 30, SRP, NA))
+
+
+epa_chem_for_microbe_mapper <- clean_epa_chem %>%
+  filter(month != "July", Depth_Class != "M") %>%
+  mutate(Depth_Class = ifelse(Depth_Class == "E", "Surface","Bottom")) %>%
+  select(month, Station_ID, Depth_Class, NH4:chl_a)
+
+save(clean_epa_chem, file = "data/05_metadata_exports/clean_epa_chem.RData")
+
+# There was one NA from MAy St. 42 for chlorophyll - in the data log, it's annotated as "broken"
+
+# Join with metatrack2
+meta_track3 <- meta_track2 %>%
+  left_join(clean_epa_chem) # Join chlorophyll and doc
+
+# Make sure chlorophyll depth matches
+meta_track3 %>%
+  mutate(average_depth_diff = Chem_Depth - Deployment_Depth_m) %>% # Check how far off their recorded depth was to ours
+  ggplot(aes(x = average_depth_diff)) + 
+  geom_histogram()
+
+# There are a few weird ones
+meta_track3 %>%
+   mutate(average_depth_diff = Chem_Depth - Deployment_Depth_m) %>%
+  arrange(average_depth_diff) %>% head()
+
+# Station 64, which is our deepest station, we took our sample 15 meters deeper supposedly than the chlorophyll samples. 
+# Because it is so deep and we know the water body in the bottom of the lake is pretty homogenous, I'm not gonna worry about it
+
+meta_track3 %>%
+   mutate(average_depth_diff = Chem_Depth - Deployment_Depth_m) %>%
+  arrange(desc(average_depth_diff)) %>% head()
+
+# And then station 41 Mid from May. It looks like here we thought we could see an Fmax perhaps, and sampled mid at 24 meters, while they sampled at true mid (~63). I think we should disregard these chem measurements (in terms of comparing to our samples).
+
+meta_track4 <- meta_track3 %>%
+  mutate(average_depth_diff = Chem_Depth - Deployment_Depth_m,
+         across(NH4:chl_a, \(x)ifelse(average_depth_diff>7, NA, x))) %>%
+  select(-average_depth_diff)
+
+```
+
+## Filtering SeaBird Data to match specifically with our sample values
+
+```{r find-closest-ctd-values}
+
+depth_df <- meta_track2 %>% 
+  mutate(is_night = month=="September"&Station_ID==33&Date==20230926) %>%
+  select(DNA_ID, month, Station_ID, Deployment_Depth_m, is_night) %>% # We just want the deployment depth and station for each DNA_ID
+  filter(!is.na(Deployment_Depth_m)) # Get rid of blanks, etc.
+
+depth_filtered_may <- may_ctd  %>%
+  mutate(month = "May") %>% # Will need this variable for joining later
+  mutate(Station_ID = str_remove(station, "stn"), # Get rid of the stn prefix
+         two_casts = ifelse(str_detect(Station_ID,"41|33|55"),TRUE, FALSE), # These are stations where we did two casts; the first for bottom and mid, the second for surface
+         depths = case_when(!two_casts ~ TRUE, # If there weren't two casts, keep all depths
+                            two_casts&str_detect(Station_ID, "b")~ FALSE, # If there were two casts AND this is the second cast "b") discard
+                            two_casts&!(str_detect(Station_ID, "b")) ~ TRUE, # If there were two casts AND this is the first cast keep
+                            TRUE ~ FALSE)) %>% # Otherwise discard depths
+  filter(depths) # The actual filtering step that we set up above
+
+# Check that the filtering worked
+depth_filtered_may %>%
+  group_by(Station_ID) %>%
+  summarize(min = min(depth),
+            max = max(depth)) %>%
+  ggplot(aes(x = Station_ID, xend = Station_ID, y = min, yend = max)) + 
+  geom_segment(linewidth = 1)
+
+may_dna_associated_ctd  <- depth_filtered_may %>%
+  mutate(Station_ID = str_remove_all(Station_ID, "-day|b-day|-a|-b"),
+         Station_ID = as.numeric(Station_ID)) %>% # Clean-up the names
+  left_join(depth_df) %>% # Join in our DNA_IDs. It's okay that there are multiple matches - essentially each DNA_ID gets the ENTIRE profile, and then we filter
+  mutate(upper = Deployment_Depth_m + 0.05, # Define 10cm range above and below deployment depth
+         lower = Deployment_Depth_m - 0.05) %>%
+  filter(depth < upper, depth > lower) %>% # Filter depths to within that 10cm range for each DNA_ID
+  group_by(DNA_ID) %>% 
+  summarize_if(is.numeric, median, na.rm = T) %>% # For every numeric measured variable, find the median for that 10cm range.
+  select(-latitude, -longitude, -Deployment_Depth_m, -upper, -lower, -depth) # Remove variables that already exist in our meta_track dataframe
+  
+depth_filtered_sep <- sep_ctd  %>% 
+  mutate(month = "September") %>% # Will need this variable for joining later
+  mutate(Station_ID = str_remove(station, "STN"),# Get rid of the stn prefix
+         two_casts = ifelse(str_detect(Station_ID,"12|29|33|35|41|43|48|55|62|64|66|^8"),TRUE, FALSE), # These are stations where we did two casts; the first for bottom and mid, the second for surface
+         depths = case_when(!two_casts ~ TRUE, # If there weren't two casts, keep all depths
+                            str_detect(Station_ID, "NIGHT") ~ TRUE, # For Station 33 night sample, keep all depths (only one cast)
+                            two_casts&str_detect(Station_ID, "-2|,2")&depth < 5.5 ~ TRUE, # If there were two casts AND this is the second cast "b") keep depths shallower than 5.5m
+                            two_casts&!(str_detect(Station_ID, "-2|,2"))&depth > 5.5 ~ TRUE, # If there were two casts AND this is the first cast keep depths deeper than 5.5m
+                            TRUE ~ FALSE)) %>% # Otherwise discard depths 
+  filter(depths) # The actual filtering step that we set up above
+
+# Check that we actually filtered correctly
+depth_filtered_sep %>%
+  group_by(Station_ID) %>%
+  summarize(min = min(depth),
+            max = max(depth)) %>%
+  ggplot(aes(x = Station_ID, xend = Station_ID, y = min, yend = max)) + 
+  geom_segment(linewidth = 1)
+
+sep_dna_associated_ctd <- depth_filtered_sep %>% 
+  mutate(is_night = str_detect(Station_ID, "NIGHT"),
+          Station_ID = str_remove_all(Station_ID, "-2|,2|-NIGHT|-DAY"),
+         Station_ID = as.numeric(Station_ID)) %>% # Clean-up the names
+  left_join(depth_df) %>% # Join in our DNA_IDs. It's okay that there are multiple matches - essentially each DNA_ID gets the ENTIRE profile, and then we filter
+  mutate(upper = Deployment_Depth_m + 0.05, # Define 10cm range above and below deployment depth
+         lower = Deployment_Depth_m - 0.05) %>%
+  filter(depth < upper, depth > lower) %>% # Filter depths to within that 10cm range for each DNA_ID
+  group_by(DNA_ID) %>% 
+  summarize_if(is.numeric, median, na.rm = T) %>% # For every numeric measured variable, find the median for that 10cm range.
+  select(-latitude, -longitude, -Deployment_Depth_m, -upper, -lower, -depth) # Remove variables that already exist in our meta_track dataframe  
+
+bound <- bind_rows(may_dna_associated_ctd, sep_dna_associated_ctd) # Bind rows
+
+samples_missing_ctd <- meta_track4$DNA_ID[!(meta_track4$DNA_ID %in% bound$DNA_ID)] # Find samples that we don't have 
+samples_missing_ctd
+# D61 and D62 are extraction negatives, 
+meta_track4 %>%
+  filter(DNA_ID %in% samples_missing_ctd) %>%
+  select(Sample_ID, DNA_ID)
+
+# Note, there were a few more here the first time I ran - cases where our logged deployment depth was deeper than the 
+# CTD depth measured. In that case, I amended our data log to reflect that lost possible depth we could have actually sampled at (e.g., for Station 62, the CTD only went to 4.8 and 18, even though we logged deployment at 5 and 18.3m)
+```
+
+# Cleaning data for OUR CTD station profiles
+
+```{r plotting-depth-profiles}
+
+may_full <- depth_filtered_may %>%
+  mutate(Station_ID = str_remove_all(Station_ID, "-day|b-day|-a|-b"),
+         Station_ID = as.numeric(Station_ID)) %>% # Clean-up the names
+  left_join(depth_df) %>%
+  filter(Station_ID %in% c(38, 12, 48, 64)) %>%
+  select(depth, oxygen, temperature, par, Station_ID, month) %>%
+  mutate(Station_ID = factor(Station_ID, levels = c(12, 64, 48,38), labels = c("Stn. 12","Stn. 64","Stn. 48","Stn. 38"))) %>%
+  filter(between(temperature, 0, 30), depth > 3) %>%
+  group_by(Station_ID) %>%
+  mutate(Bottom_yet = depth >= max(depth)) %>%
+  filter(cumsum(Bottom_yet) < 2) %>%
+  slice_sample(n = 10000) %>%
+  arrange(depth, .by_group = TRUE)
+
+
+
+sep_full <- depth_filtered_sep %>%
+  mutate(is_night = str_detect(Station_ID, "NIGHT"),
+          Station_ID = str_remove_all(Station_ID, "-2|,2|-NIGHT|-DAY"),
+         Station_ID = as.numeric(Station_ID)) %>% # Clean-up the names
+  left_join(depth_df) %>% # Join in our DNA_IDs. It's okay that there are multiple matches - essentially each DNA_ID gets the ENTIRE profile, and then we filter
+  filter(Station_ID %in% c(38, 12, 48, 64)) %>%
+  select(depth, oxygen = oxygen2, temperature, par, Station_ID, month) %>%
+  mutate(Station_ID = factor(Station_ID, levels = c(12, 64, 48,38), labels = c("Stn. 12","Stn. 64","Stn. 48","Stn. 38"))) %>%
+  filter(between(temperature, 0, 30), depth > 3) %>%
+  group_by(Station_ID) %>%
+  mutate(Bottom_yet = depth >= max(depth)) %>%
+  filter(cumsum(Bottom_yet) < 2) %>%
+  slice_sample(n = 10000) %>%
+  arrange(depth, .by_group = TRUE) %>% 
+  ungroup()
+
+```
+
+
+```{r plotting-all-depth-profiles}
+
+may_full_all <- depth_filtered_may %>%
+  mutate(Station_ID = str_remove_all(Station_ID, "-day|b-day|-a|-b"),
+         Station_ID = as.numeric(Station_ID)) %>% # Clean-up the names
+  left_join(depth_df) %>%
+  select(depth, oxygen, temperature, par, Station_ID, month) %>%
+  mutate(Station_ID = paste("Stn.", Station_ID)) %>%
+  filter(between(temperature, 0, 30), depth > 3) %>%
+  group_by(Station_ID) %>%
+  mutate(Bottom_yet = depth >= max(depth)) %>%
+  filter(cumsum(Bottom_yet) < 2) %>%
+  slice_sample(n = 100) %>%
+  arrange(depth, .by_group = TRUE)
+
+
+
+sep_full_all <- depth_filtered_sep %>%
+  mutate(is_night = str_detect(Station_ID, "NIGHT"),
+          Station_ID = str_remove_all(Station_ID, "-2|,2|-NIGHT|-DAY"),
+         Station_ID = as.numeric(Station_ID)) %>% # Clean-up the names
+  left_join(depth_df) %>% # Join in our DNA_IDs. It's okay that there are multiple matches - essentially each DNA_ID gets the ENTIRE profile, and then we filter
+  select(depth, oxygen = oxygen2, temperature, par, Station_ID, month) %>%
+  mutate(Station_ID = paste("Stn.",Station_ID)) %>%
+  filter(between(temperature, 0, 30), depth > 3) %>%
+  group_by(Station_ID) %>%
+  mutate(Bottom_yet = depth >= max(depth)) %>%
+  filter(cumsum(Bottom_yet) < 2) %>%
+  slice_sample(n = 100) %>%
+  arrange(depth, .by_group = TRUE) %>% 
+  ungroup()
+
+
+
+
+full_size_all <- rbind(may_full_all, sep_full_all)
+temp_limits_all <- range(full_size_all$temperature)
+oxy_limits_all <- range(full_size_all$oxygen)
+
+
+full_size_may <- filter(full_size_all, month == "May")
+
+full_size_sep <- filter(full_size_all, month == "September")
+
+all_plots_all <- map(c("May","September"), \(x){
+  data <- filter(full_size_all, month == x)
+  month_plots <- map(unique(data$Station_ID), \(y){
+    print(paste0("Plotting ",y,"from ", x))
+    temp <- data %>%
+      mutate(rescaled_oxygen = scales::rescale(oxygen, from = oxy_limits_all, to = temp_limits_all)) %>%
+      filter(Station_ID == y) %>%
+      pivot_longer(cols = c(oxygen, temperature), names_to = "Variable", values_to = "Measure") %>%
+      ggplot(aes(x = Measure, y = depth, color = Variable)) + 
+      ggplot2::geom_path() + 
+      facet_wrap(~Station_ID, scales = "free", strip.position = "bottom") + 
+      scale_y_reverse() + 
+      scale_x_continuous(position = "top") + 
+      scale_color_manual(values = c("dodgerblue3", "red3")) + 
+      coord_cartesian(xlim = temp_limits_all) + 
+      labs(x = "Temp. (°C)", y = "Depth (m)") +
+      theme(strip.text = element_text(size = 12),
+            axis.title.x = element_text(size = 10, color = "red3"),
+            axis.text = element_text(size = 8),
+            legend.position = "none")
+  
+    oxy <- ggplot() + 
+      scale_x_continuous(limits = oxy_limits_all, position = "top") + 
+      labs(x = "Oxygen (mg/L)") + 
+      theme(axis.title = element_text(size = 10, color = "dodgerblue3"),
+            axis.text = element_text(size = 8))
+    
+    oxy / temp + plot_layout(heights = c(.1,1))
+  })
+  wrap_plots(month_plots, ncol = 3, nrow = 5)
+})
+```
+
+
+```{r may_depth_profiles, fig.width = 8, fig.height=12}
+all_plots_all[[1]]
+
+```
+
+
+```{r sept_depth_profiles, fig.width = 8, fig.height=12}
+all_plots_all[[2]]
+
+```
+
+
+# Prepping all CTD station data for mapping and plotting
+
+These data are for plotting environmental variables across the lake. Let me tell you it was a PAIN to clean them up lol. 
+
+```{r cleaning-all-may-stations}
+
+may_all_stations <- rbind(may_ctd, may_other_ctd) %>%
+  filter(!str_detect(station, "b"),
+         #!station%in% c("stn64","stn63","stn715"),
+         !str_detect(station, "night"),
+         depth>4.5&depth<300,
+         between(temperature, 0,30)) %>%
+  group_by(station) %>%
+  mutate(Bottom_yet = depth >= max(depth)) %>%
+  filter(cumsum(Bottom_yet) < 2) %>%
+  arrange(depth, .by_group = TRUE) %>%
+  mutate(month = "May") %>%
+  mutate(bins = cut_interval(depth, n = 100)) %>% 
+  ungroup() %>%
+  nest_by(station, bins) %>% 
+  mutate(selected = list(arrange(data, depth) %>% dplyr::slice(c(1, as.integer(round((1 + n()) / 2)), n())))) %>%
+  select(-data) %>%
+  unnest(selected) %>%
+  ungroup() %>% 
+  separate(station, into = c("Station_ID", "discard"), sep = "-") %>%
+  select(-discard, -Bottom_yet, - startTime) %>%
+  mutate(Station_ID = str_remove_all(Station_ID, "stn"),
+         Station_ID = as.numeric(Station_ID)) %>%
+  select(Station_ID, temperature, conductivity, par, fluorescence, spar, upoly, depth, oxygen, salinity, latitude, longitude, month)
+    
+save(may_all_stations, file = "data/05_metadata_exports/all_may_stations.RData")
+```
+
+
+```{r cleaning-all-sept-stations}
+sep_all_stations <- rbind(sep_ctd, sep_other_ctd) %>% 
+  mutate(station = ifelse(station == "STN65-NIGHT", "STN65", station),
+         station = ifelse(station == "STN28-NIGHT", "STN28", station)) %>% # We only have a ctd cast from night time for stn 65 and 28, but this would otherwise get filtered out
+  # This is to carefully select one full cast per station, preferencing day cast if possible
+  filter(!str_detect(station, ",2|-2"),
+         #!station%in% c("STN34","stn63","stn715"),
+         !str_detect(station, "NIGHT"),
+         depth>1&depth<250,
+         between(temperature, 0,30),
+         between(oxygen2, 0, 25)) %>% 
+  group_by(station) %>%
+  mutate(Bottom_yet = depth >= max(depth)) %>%
+  filter(cumsum(Bottom_yet) < 2) %>%
+  arrange(depth, .by_group = TRUE) %>%
+  mutate(month = "September") %>%
+  mutate(bins = cut_interval(depth, n = 100)) %>% 
+  ungroup() %>%
+  nest_by(station, bins) %>% 
+  mutate(selected = list(arrange(data, depth) %>% dplyr::slice(c(1, as.integer(round((1 + n()) / 2)), n())))) %>%
+  select(-data) %>%
+  unnest(selected) %>%
+  ungroup() %>% 
+  separate(station, into = c("Station_ID", "discard"), sep = "-") %>%
+  select(-discard, -Bottom_yet, - startTime) %>%
+  mutate(Station_ID = str_remove_all(Station_ID, "STN"),
+         Station_ID = as.numeric(Station_ID)) %>%
+  select(Station_ID, temperature, conductivity, par, fluorescence, spar, upoly, depth, oxygen = oxygen2, salinity, latitude, longitude, month)
+    
+save(sep_all_stations, file = "data/05_metadata_exports/all_sep_stations.RData")
+```
+
+## Combining and Organizing Metadata
+
+```{r, temp_cutoffs_for_thermocline}
+
+full_meta <- meta_track4 %>%
+  left_join(bound) %>%
+  mutate(transect = case_when(Station_ID %in% c("8","12","17")~ "T1",
+                              Station_ID %in% c("29","33","35")~ "T2",
+                              Station_ID %in% c("43","41","38")~ "T3",
+                              Station_ID %in% c("48","55","717")~ "T4",
+                              Station_ID %in% c("66","64","62","74")~ "T5"),
+         good_oxygen = ifelse(month=="May", oxygen, oxygen2)
+         )
+
+save(full_meta, file = "data/05_metadata_exports/full_meta.RData")
+
+write_csv(full_meta, file = "data/05_metadata_exports/full_meta.csv")
+
+```
+
+# Session Information 
+```{r}
+# Reproducibility
+devtools::session_info()
+```

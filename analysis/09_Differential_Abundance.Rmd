@@ -1,0 +1,188 @@
+---
+title: "Differential Abundance" 
+author: "Augustus Pendleton"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: show
+    highlight: default
+    keep_md: yes
+    theme: journal
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+      toc_depth: 3
+editor_options: 
+  chunk_output_type: console
+---
+<style>
+pre code, pre, code {
+  white-space: pre !important;
+  overflow-x: scroll !important;
+  word-break: keep-all !important;
+  word-wrap: initial !important;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+# For width of code chunks and scroll bar 
+options(width=250)
+
+options(getClass.msg=FALSE)
+
+knitr::opts_chunk$set(eval = TRUE, 
+                      echo = TRUE, 
+                      include = TRUE,
+                      warning = FALSE,
+                      collapse = FALSE,
+                      message = FALSE,
+                      dpi=300, dev = "png",
+                      engine = "R", # Chunks will always have R code, unless noted
+                      error = TRUE,
+                      fig.path="../figures/09_Differential_Abundance/",  
+                      fig.align = "center") 
+
+```
+
+# Load packages 
+
+```{r load-packages}
+# Efficiently load packages 
+pacman::p_load(phyloseq, ggpubr, tidyverse, ANCOMBC, microViz, ggrepel, combinat, install = FALSE)
+
+knitr::write_bib(file = "data/09_differential_exports/packages.bib")
+
+# load in functions and color preferences
+source("code/R/plotting_aesthetics.R")
+
+load("data/08_compositional_exports/full_abs_physeq.RData")
+
+# This bit is necessary because otherwise ASV is treated as a taxonomic level above Kingdom, which causes problems.
+releveled_physeq <- full_abs_physeq %>%
+  speedyseq::relocate_tax_table(ASV, .after = last_col()) %>%
+  speedyseq::mutate_tax_table(Species = ASV)
+
+```
+
+
+# Running ANCOM
+
+I similarly ran many ANCOMs in preparing this, at different taxonomic levels and using different Comp_Groups (Depth-Month groups). This is the one we settled on for the paper. 
+
+Cleaning up the output of ANCOM is a bit of a pain, so there's a lot of code for rearranging, filtering, and cleaning in this block. ANCOM also takes awhile to run - hence the running and storing as an object. 
+
+```{r ancom-class-but-only-3-groups}
+
+# class_ancom_3g_output <- ancombc2(data = releveled_physeq,
+#                                 tax_level = "Class", # Test for each ASV
+#                                 fix_formula = "Comp_Group_Hier", # Use Comp_Group_Hier to estimate diff. abundance
+#                                 p_adj_method = "holm", # Adjust with Holm-Bonferroni correction; recommended by authors
+#                                 pseudo_sens = TRUE, # Run sensitivity test to make sure taxa isn't sensitive to psuedo-count choice
+#                                 prv_cut = 0.10, # Prevalence filter of 10%
+#                                 group = "Comp_Group_Hier", # Use Comp_Group_Hier as groups when doing pairwise comparisons
+#                                 struc_zero = TRUE, # Detect structural zeroes
+#                                 alpha = 0.05, # Significance threshold of 0.05
+#                                 n_cl = 6, # Use 6 threads
+#                                 verbose = FALSE, # Don't print verbose output
+#                                 global = TRUE, # Run a global test (sorta like an ANOVA to first find if a given ASV is sig diff between at least two groups)
+#                                 pairwise = TRUE) # Run pairwise tests between groups (sorta like a post-hoc test like Tukey)
+# 
+# save(class_ancom_3g_output, file = "data/09_differential_exports/class_ancom_3g_output.RData")
+
+load( "data/09_differential_exports/class_ancom_3g_output.RData")
+
+
+clean_class <- class_ancom_3g_output$res_pair %>%
+  select(taxon, starts_with("lfc"), starts_with("diff"), starts_with("passed_ss")) %>%
+  pivot_longer(cols = !taxon, names_to = "metric", values_to = "value") %>%
+  separate_wider_delim(cols = metric, delim = "_", names = c("variable", "Comparison"), too_many = "merge") %>%
+  mutate(Comparison = str_remove(Comparison, "ss_")) %>%
+  pivot_wider(id_cols = c("taxon","Comparison"), names_from = variable, values_from = value) %>%
+  mutate(Comparison = str_remove(Comparison, "Comp_Group_Hier"),
+         Comparison = str_replace(Comparison, "_Comp_Group_Hier", ";")) %>%
+  separate_wider_delim(Comparison, delim = ";", names = c("Ref1", "Ref2"), too_few = "align_start") %>%
+  mutate(Ref2 = ifelse(is.na(Ref2), "Deep", Ref2),
+         Comparison = paste0(Ref1, " : ",Ref2)) %>% 
+  dplyr::filter(diff == 1,
+         passed == 1) %>%
+  separate(taxon, into = c("Kingdom","Phylum","Class"), sep = "_") %>%
+  dplyr::filter(Class != "NA") %>%
+  select(Phylum, Class, Comparison, lfc)
+
+clean_structural_zeros <- class_ancom_3g_output$zero_ind %>%
+  dplyr::rename(One = 2, Two = 3, Three = 4) %>%
+  filter(2|3|4) %>%
+  separate(taxon, into = c("Kingdom","Phylum","Class"), sep = "_") %>%
+  dplyr::filter(Class != "NA")
+  
+
+melted_3group <- psmelt(releveled_physeq)
+
+```
+
+So I had this fun idea for how to plot these data. I want to express both how strongly a given ASV is present in one group vs. another, while also showing its overall general abundance. To do this, I am defining each group (Deep, Shallow_May, and Shallow_September) as an axis along the unit circle (at 0, 2/3pi, and 4/3pi). Then, the mean abundance of each Class along each of those axes forms a triangle. I then calculate the centroid of that triangle, and plot it. These allows us to see when a given class trends two just one group, or sorta both groups, or isn't really that strongly different. It was a fun dive back into Trig and the unit circle.
+
+```{r FIGURE-S12C, fig.width = 6.5, fig.height = 6.5}
+
+centroid_data <- melted_3group %>%
+  select(Class, Abundance, Comp_Group_Hier) %>%
+  filter(Class %in% c(clean_class$Class, clean_structural_zeros$Class)) %>% # Select either differentially abundant or structural zero taxa
+  group_by(Comp_Group_Hier, Class) %>%
+  summarize(Mean_Abundance = mean(Abundance)) %>% # Find the mean absolute abundance of each class
+  ungroup() %>%
+  group_by(Class) %>%
+  mutate(Rel_Abund = Mean_Abundance / sum(Mean_Abundance), # Find the mean relative abundance of each class within each group
+         Theta = case_when(Comp_Group_Hier == "Deep"~.5 * pi, # This has to do with transforming points to polar space
+                           Comp_Group_Hier == "Shallow_May"~(7/6) * pi,
+                           Comp_Group_Hier == "Shallow_September" ~ (11/6) * pi),
+         x = Rel_Abund * cos(Theta),
+         y = Rel_Abund * sin(Theta)) %>%
+  summarize(centr_x = mean(x),
+            centr_y = mean(y))
+
+# This next bit is to scale each class point by its maximum size (because they were ordinated by their mean abundance)
+
+phy_and_abund <- melted_3group %>%
+  select(Class, Abundance, Comp_Group_Hier, Phylum) %>%
+  filter(Class %in%  c(clean_class$Class, clean_structural_zeros$Class)) %>%
+  group_by(Phylum, Class) %>%
+  summarize(Max_Abundance = max(Abundance)) %>%
+  ungroup()
+
+centroid_data %>% 
+  left_join(phy_and_abund) %>%
+  filter(Max_Abundance > 5000) %>%
+  ggplot(aes(x = centr_x, y = centr_y)) + 
+  annotate(geom = "segment", color = "grey80", 
+           x = 0, y = 0, xend = .36 * cos(pi * c(.5, 7/6, 11/6)), yend = .36 * sin(pi * c(.5, 7/6, 11/6))) + 
+  annotate(geom = "text", label = c("Deep","Shallow\nMay","Shallow\nSeptember"),
+           x = c(.3,.37,.4) * cos(pi * c(.5, 7/6, 11/6)), y = c(0.37,0.37,0.4) * sin(pi * c(.5, 7/6, 11/6)),
+           color = comp_three_colors[c(3,1,2)],
+           fontface = "bold") + 
+  geom_point(aes(size = Max_Abundance, color = Class)) + 
+  geom_text_repel(aes(label = Class, color = Class), size = 3.3) + 
+  coord_fixed(xlim = .4 * cos(pi * c(7/6, 11.5/6)), ylim = .4 * sin(pi * c(7/6, .5))) + 
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank())+
+  scale_size(guide = "none") + 
+  scale_color_manual(values= class_colors) + 
+  theme(legend.background = element_rect(color = "white"),
+        legend.key.size = unit(2.9, "mm"),
+        legend.title = element_blank(),
+        panel.margin = unit(c(0,0,0,0), "mm"),
+        legend.position = "none")  
+
+```
+
+
+## Session Info
+
+```{r session_info}
+
+sessioninfo::session_info()
+
+```

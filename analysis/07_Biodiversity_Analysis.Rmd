@@ -1,0 +1,266 @@
+---
+title: "Alpha Diversity Analysis"
+author: "Augustus Pendleton"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: show
+    highlight: default
+    keep_md: yes
+    theme: journal
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+      toc_depth: 3
+editor_options: 
+  chunk_output_type: console
+---
+<style>
+pre code, pre, code {
+  white-space: pre !important;
+  overflow-x: scroll !important;
+  word-break: keep-all !important;
+  word-wrap: initial !important;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+# For width of code chunks and scroll bar 
+options(width=250)
+
+knitr::opts_chunk$set(eval = TRUE, 
+                      echo = TRUE, 
+                      include = TRUE,
+                      warning = FALSE,
+                      collapse = FALSE,
+                      message = FALSE,
+                      dpi=300, dev = "png",
+                      engine = "R", # Chunks will always have R code, unless noted
+                      error = TRUE,
+                      fig.path="../figures/07_Biodiversity_Analysis/",  
+                      fig.align = "center") 
+
+```
+
+
+# Load packages 
+```{r load-packages}
+
+# Efficiently load packages install.packages("hillR")
+pacman::p_load(phyloseq, iNEXT, tidyverse, ggpubr, hillR, microViz, fun.gus, ggbeeswarm, randomForest, ggrepel, patchwork, ggdendro, install = FALSE)
+
+knitr::write_bib(file = "data/07_biodiversity_exports/packages.bib")
+
+source("code/R/plotting_aesthetics.R")
+
+load("data/05_metadata_exports/full_meta.RData")
+
+```
+
+# Load data
+
+This is a little tricky - the cut_table.RData object relies on work that we do in 08_Compositional_Analysis, which we need. Luckily, we already have this object saved, if you've cloned this Git repo. 
+
+```{r load-data}
+
+load("data/06_phylogeny_exports/trim_tree_physeq.RData")
+
+trim_tree_physeq
+
+load("data/08_compositional_exports/cut_table.RData")
+
+```
+
+# The structure of this document
+
+# Confirm replicates are close to each other
+
+```{r FIGURE-S2B, fig.width = 6, fig.height = 4}
+
+new_sam_data <- trim_tree_physeq %>%
+  ps_mutate(Rep_ID = paste(month, Station_ID, Depth_Class, sep = "_")) %>%
+  samdat_tbl() %>%
+  left_join(cut_table) %>%
+  as.data.frame()
+
+rownames(new_sam_data) <- new_sam_data$DNA_ID
+
+rep_physeq <- merge_phyloseq(trim_tree_physeq, sample_data(new_sam_data))
+
+plot_ordination(
+  physeq = rep_physeq ,
+  ordination = ordinate(rep_physeq , "bray", method = "PCoA", binary = TRUE),
+  color = "Comp_Group_Hier") +
+  geom_line(aes(group = Rep_ID,
+                color = Comp_Group_Hier)) +
+  scale_color_manual(values = comp_three_colors) + 
+  labs(color = "Depth/Month Group") + 
+  theme(axis.text = element_text(size = 8),
+        axis.title = element_text(size = 9),
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 9),
+        legend.box.background = element_blank(),
+        legend.position = "bottom")
+
+```
+
+```{r FIGURE-S2A, fig.height = 9, fig.width = 3}
+
+jac_dist_mat <- distance(rep_physeq, "bray", binary = TRUE)
+
+jac_hclust <- jac_dist_mat %>%
+  hclust(method = "average")
+
+dendrogram <- jac_hclust %>%
+  as.dendrogram() 
+
+tip_groups <- data.frame(DNA_ID = dendro_data(dendrogram)$labels$label) %>%
+   left_join(unique(select(data.frame(sample_data(trim_tree_physeq)), DNA_ID, Station_ID, month, Depth_Class)))
+
+dend_data <- dendro_data(dendrogram)
+
+ggplot(dend_data$segments) + 
+  geom_segment(aes(x = x, y = y, xend = xend, yend = yend)) + 
+  geom_text(data = dend_data$labels, aes(x, y, label = paste(tip_groups$month, tip_groups$Depth_Class, tip_groups$Station_ID, sep = "_"), color = paste(tip_groups$month, tip_groups$Depth_Class, tip_groups$Station_ID, sep = "_")),
+            hjust = 0, size = 2) + 
+  theme_void() +
+  coord_flip() + 
+  scale_y_reverse(expand = expansion(mult = .5)) + 
+  scale_x_continuous(expand = expansion(mult = 0.1))+
+  scale_color_manual(values = c(c25, c25, c25, c25, c25)) + 
+  theme(legend.position = "none")
+
+
+```
+
+Generally replicates are most similar to each other!
+
+# Merging my data
+
+First, I merged replicates together, by summing their read counts. This also involves some cleaning up of the sample data, because categorical variables don't like to be combined. I also remove samples which provide unnecessary information (e.g. day vs. night samples). 
+
+# Removing and merging samples
+
+```{r merge-samples}
+
+rownames(full_meta) <- full_meta$DNA_ID
+
+full_meta_physeq <- merge_phyloseq(trim_tree_physeq, sample_data(full_meta))
+
+samples_to_remove <- c("AP_D1","AP_D2","AP_D151", "AP_D152", "AP_D147", "AP_D148", "AP_D149", "AP_D150") # These are our Stn 17 and Stn 33 stations
+
+rm_sample_physeq <- full_meta_physeq %>%
+  subset_samples(., !DNA_ID %in% samples_to_remove)%>% # Remove them from our phyloseq object
+  prune_taxa(taxa_sums(.) > 0 , .) %>% # Get rid of taxa that now are completely absent
+  ps_mutate(Rep_ID = paste(month, Station_ID, Depth_Class, sep = "_")) # Create new idea which combines replicates
+
+merged_physeq <- rm_sample_physeq %>%
+  merge_samples("Rep_ID") # Merge replicates based on Rep_ID. Counts are SUMMED, and numerical metadata is AVERAGED
+
+# Confirm that we didn't add reads
+stopifnot(sum(otu_table(merged_physeq)) == sum(otu_table(rm_sample_physeq)))
+
+# For categorical variables, need to add that back separately
+
+joined_vars <- full_meta_physeq %>%
+  ps_mutate(Rep_ID = paste(month, Station_ID, Depth_Class, sep = "_"))%>% # Add Rep_ID column
+  ps_select(month, Depth_Class, is_Fmax, is_stratified, transect, Depth_Range, Rep_ID) %>% # Grab our categorical variables
+  samdat_tbl() %>% # Convert to tibble
+  select(-.sample_name) %>% # Drop sample name
+  unique() %>% # Combine replicates 
+  left_join(cut_table)
+
+full_merged_physeq <- merged_physeq %>%
+  ps_select(!where(\(col)all(is.na(col)))) %>% # Drop all of the categorical columns that turned to NAs
+  ps_select(!c(Depth_Range)) %>% # Drop factor columns that technically got averaged but lost their factor class
+  ps_join(joined_vars, match_sample_names = "Rep_ID") # Join in our categorical data
+
+```
+
+# Run iNEXT on Merged Samples
+
+```{r merged-iNEXT}
+
+merged_iNEXT_input_df <- full_merged_physeq %>%
+  otu_table() %>% 
+  t() %>% # This is necessary if taxa_are_rows == FALSE
+  data.frame()
+
+#Run iNEXT on full merged dataset - slow!
+# merge_iNEXT <- iNEXT(merged_iNEXT_input_df, datatype = "abundance", q = c(0,1,2))
+# 
+# save(merge_iNEXT, file = "data/07_biodiversity_exports/merge_iNEXT.RData")
+
+
+load("data/07_biodiversity_exports/merge_iNEXT.RData")
+
+# Just using size based estimation
+size_based_data <- merge_iNEXT$iNextEst$size_based
+
+```
+
+We'll be using the size_based output. Coverage is inapplicable to DADA2 datasets, as they lack singletons (this is also why we can't use Amy Willis's breakaway approach). I am suspicious of the Asymptotic Estimator. Hence, we'll be using the size_based approach, with the caveat that we will very rigorously confirm that we've approached saturation for all of our samples!
+
+Now, let's confirm we reach saturation for our samples (and so can use their observed values without fear of underestimation). 
+
+```{r FIGURE-S4, fig.width=10, fig.height=5.33}
+size_based_data %>%
+  dplyr::rename(Rep_ID = Assemblage) %>%
+  left_join(joined_vars) %>%
+  filter(Order.q == 0, Method != "Extrapolation")  %>%
+  mutate(Depth_Class = factor(Depth_Class, levels = c("E","M","B"), labels = c("Surface", "Mid","Bottom"))) %>%
+  ggplot(aes(x = m, y = qD, group = Rep_ID)) + 
+  geom_point(aes(size = Method), alpha = .6) + 
+  geom_line() + 
+  facet_wrap(month ~ Depth_Class, scales = "free") + 
+  scale_size_discrete(range = c(2,0), guide = "none") + 
+  labs(x = "Sample Size", y = "Richness")
+
+```
+
+This makes me feel good!
+
+So moving forward, I will be using the observed richness values. I am also going to calculate the Phylogenetic Hill Diversity using the hillR package, without normalization.
+
+# Calculating Phylogenetic Diversity
+
+```{r merged-phylo-diversity}
+hillR_input_df <- t(merged_iNEXT_input_df)
+
+q_nums <- c("Phylo_Richness" = 0, "Phylo_Shannon" = 1, "Phylo_Simpson" = 2)
+
+# This takes a little bit
+hillR_res <- map_dfr(q_nums, \(.q)hill_phylo(hillR_input_df, phy_tree(full_merged_physeq), q = .q), .id = "Order.q")
+
+hillR_for_join <- hillR_res %>%
+  pivot_longer(!Order.q, names_to = "Rep_ID", values_to = "qD") %>%
+  pivot_wider(names_from = Order.q, values_from = qD)
+
+```
+
+# Join in Diversity Measures and Save
+
+```{r add_alpha_and_save}
+diversity_results <- size_based_data %>%
+  dplyr::rename(Rep_ID = Assemblage) %>%
+  dplyr::filter(Method == "Observed") %>%
+  mutate(Alpha = case_match(Order.q, 0 ~ "Richness", 1 ~ "Shannon", 2 ~ "Simpson")) %>%
+  select(Rep_ID, qD, Alpha) %>%
+  pivot_wider(names_from = Alpha, values_from = qD) %>%
+  left_join(hillR_for_join)
+
+full_diversity_physeq <- full_merged_physeq %>%
+  ps_join(diversity_results)
+
+save(full_diversity_physeq, file = "data/07_biodiversity_exports/full_diversity_physeq.RData")
+
+```
+
+
+```{r session-info}
+
+sessioninfo::session_info()
+
+```

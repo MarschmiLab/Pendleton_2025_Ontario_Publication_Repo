@@ -1,0 +1,291 @@
+---
+title: "Constructing a Phylogeny"
+author: "Augustus Pendleton"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: show
+    highlight: default
+    keep_md: yes
+    theme: journal
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+      toc_depth: 3
+editor_options: 
+  chunk_output_type: console
+---
+<style>
+pre code, pre, code {
+  white-space: pre !important;
+  overflow-x: scroll !important;
+  word-break: keep-all !important;
+  word-wrap: initial !important;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+# For width of code chunks and scroll bar 
+options(width=250)
+
+knitr::opts_chunk$set(eval = TRUE, 
+                      echo = TRUE, 
+                      include = TRUE,
+                      warning = FALSE,
+                      collapse = FALSE,
+                      message = FALSE,
+                      dpi=300, dev = "png",
+                      engine = "R", # Chunks will always have R code, unless noted
+                      error = TRUE,
+                      fig.path="../figures/06_Phylogeny_Construction/",  
+                      fig.align = "center") 
+
+```
+
+# Purpose of this document
+
+Here, I build a phylogenetic tree, for later use in phylogenetically weighted richness and distance measures. 
+
+The goal of this document is to create a phylogenetic tree from the processed data and add it to the phyloseq object.
+
+1. Load PhyloSeq_Preprocessing data
+2. Create ASV file from PhyloSeq_Preprocessing
+3. Upload ASV file to alignment (MAFFT) 
+4. Run FastTree on aligned ASV file
+5. Load FastTree unrooted tree
+6. Add unrooted tree to preprocess_physeq object
+7. Visualize with ggtree
+8. Prune if needed
+9. Save final tree with phyloseq object
+
+# Load Packages and Functions
+```{r load-pack}
+# Load Packages
+pacman::p_load(phyloseq, ggtree, ggpubr, tidytree, phytools, tidyverse, install = FALSE)
+
+knitr::write_bib(file = "data/06_phylogeny_exports/packages.bib")
+
+# load colors and shapes
+source("code/R/plotting_aesthetics.R")
+```
+
+
+# Load data
+
+```{r load-data}
+# Load in the raw_phyloseq data from DADA2_workflow.Rmd
+load("data/03_preprocessing_exports/preprocessed_physeq.RData")
+
+preprocessed_physeq
+```
+
+
+# Write ASV Fasta file
+```{r write-asv}
+# first pull taxonomic table from phyloseq object
+# contains ASV and sequences
+tax_table <- preprocessed_physeq@tax_table %>% as.data.frame() %>% 
+  select(ASV, ASVseqs)
+
+# add > symbol to ASV names for file formatting
+tax_table$ASV <- paste0(">",tax_table$ASV)
+
+# bind ASVs and sequences together in one long character
+seqs_fasta <- c(rbind(tax_table$ASV, tax_table$ASVseqs))
+
+# write seqs_fasta out as a fasta file
+write(seqs_fasta, file = "data/06_phylogeny_exports/preprocessed_asvs.fasta")
+
+```
+
+
+# Upload to MAFFT
+
+This step aligns the ASV fasta from phyloseq_preprocessing and outputs an aligned fasta file. If you have more than 50,000 sequences, the method used is most likely FFT-large-NS-2. 
+
+Always run any bash chunk from the project home directory.
+
+```{r run-maffft, engine = 'bash', engine.opts='-l', eval = FALSE}
+
+# Run MAFFT on file
+# I am using auto options for now (instead of specifying arguments)
+# MAFFT automatically recognizes that it is a nucleotide alignment
+
+# Set seed (not sure if relevant but not taking chances)
+RANDOM=31491
+
+/programs/mafft/bin/mafft --auto --quiet data/06_phylogeny_exports/preprocessed_asvs.fasta > data/06_phylogeny_exports/aligned_asvs.fasta 
+
+```
+
+
+# FastTree
+
+This section of code takes the aligned fasta file and runs it through Fast Tree to output an unrooted tree. It also takes awhile. The end of the logfile will tell you relevant information on who the tree was built. 
+
+```{r run-fasttree, engine = 'bash', engine.opts='-l', eval = FALSE}
+#add to path
+export PATH=/programs/FastTree-2.1.11:$PATH
+
+# run command
+# -nt indicates it is a nucleotide alignment 
+# -gtr sets the model to a generalized time-reversible model 
+# -fastest speeds up the process and reduces memory usage (recommended for >50,000 sequences) - check if gtr is neighbor-joining
+# takes aligned_seqs fasta file as input and outputs unrooted.tree
+# saves log file as fasttree.log (includes intermediate trees, settings, and model details)
+# Again, setting seed, not sure that it's necessary
+
+RANDOM=31491
+FastTree -gtr -nt -fastest -quiet -log data/06_phylogeny_exports/fasttree.log data/06_phylogeny_exports/aligned_asvs.fasta  > data/06_phylogeny_exports/unrooted.tree
+
+```
+
+# Plot with ggtree
+
+First load tree and add to phyloseq object
+```{r create-physeq, fig.dim = c(12, 6)}
+# read tree file
+tree <- read.tree("data/06_phylogeny_exports/unrooted.tree") 
+```
+
+
+
+# Rooting our tree
+
+```{r first-tree-view}
+
+# Find ASVs that are Archaea
+arch_asvs <- tax_table(preprocessed_physeq) %>%
+  as.data.frame() %>%
+  filter(Kingdom == "Archaea") %>%
+  pull(ASV)
+
+# Find the node that encompasses all Archaea
+arch_node <- findMRCA(tree, tips = arch_asvs, type = "node")
+
+# Root the tree at that node
+arch_root_tree <- ape::root(tree, node = arch_node, resolve.root = TRUE)
+is.rooted(arch_root_tree)
+
+
+# Merge with our physeq
+arch_root_physeq <- merge_phyloseq(preprocessed_physeq, arch_root_tree)
+
+# Plot
+ggtree(arch_root_physeq) + 
+  geom_tippoint(aes(color = Kingdom))
+
+
+ggtree(arch_root_physeq) + 
+  geom_tippoint(aes(color = Phylum))
+
+```
+
+Okay, our tree looks pretty good. However, we see some very long bacterial outgroups that I am suspicious of. Let's explore three lines of evidence for each of these ASVs:
+
+1. Their branch length
+2. Their overall abundances
+
+# Looking at their branch lengths
+
+```{r visualizing-root-heights}
+# We can trim our trim by limiting how far branches are allow to be from the root
+rootedTree <- phy_tree(arch_root_physeq)
+is.rooted(rootedTree)
+# Here, we find the node number of each tip
+nodes <- purrr::map_dbl(rootedTree$tip.label, function(x,y)which(y==x),y=rootedTree$tip.label)
+
+# We'll name it, just to stay consistent
+names(nodes) <- rootedTree$tip.label
+
+# Then, we'll calculate the height from the root for each tip (node)
+heights <- purrr::map_dbl(nodes, nodeheight, tree = rootedTree, .progress = TRUE)
+
+# We define some arbitrary heights to filter our tree be
+cutoffs <- c(1, 1.6, 2,3, Inf)
+
+# Find which ASVs would be disqualifed based on these heights
+cut_asvs <- purrr::map(cutoffs, \(x)names(heights)[heights>x])
+
+names(cut_asvs) <- paste0("RootHeight_", cutoffs)
+
+# Now, produce multiple physeq objects which have had those long tips removed
+subset_physeqs <- list()
+for(cut_i in 1:length(cut_asvs)){
+  subset_physeqs[[cut_i]] <- subset_taxa(arch_root_physeq, !ASV %in% cut_asvs[[cut_i]])
+}
+
+names(subset_physeqs) <- paste0("RootHeight_", cutoffs)
+
+# Plot each tree
+plots <- purrr::map(subset_physeqs, function(x)x%>%
+               ggtree()+
+               geom_tippoint(aes(color=Kingdom), size=1.5)+
+                 xlim(c(0,12)))
+
+# Visualize - which cutoff seems reasonable?
+ggarrange(plotlist = plots, ncol = 1, labels = paste("Max height from root at", cutoffs))
+```
+
+To me, it looks like limiting distance from the root at length 2 seems the most reasonable. For the ASVs that we're dropping, what are their counts?
+
+# Looking at feature counts
+
+```{r feature-counts}
+arch_root_physeq %>%
+  subset_taxa(., ASV %in% cut_asvs[["RootHeight_2"]]) %>%
+  otu_table() %>%
+  rowSums() %>% 
+  sort
+```
+
+Okay, the taxa we're getting rid of are all very rare - makes me feel better.
+
+# Final tree
+
+```{r trimmed-tree}
+trim_tree_physeq <- subset_physeqs[["RootHeight_2"]]
+
+# Can we re-root?
+trim_tree <- phy_tree(trim_tree_physeq)
+
+new_arch_asvs <- trim_tree_physeq %>%
+  tax_table() %>%
+  data.frame() %>%
+  filter(Kingdom == "Archaea") %>%
+  pull(ASV)
+
+
+new_arch_node <- findMRCA(trim_tree, tips =  new_arch_asvs, type = "node")
+
+# Root the tree at that node
+new_arch_root_tree <- ape::root(trim_tree, node = new_arch_node, resolve.root = TRUE)
+
+is.rooted(new_arch_root_tree)
+# Merge with our physeq
+trim_tree_physeq@phy_tree <- NULL
+
+new_arch_root_physeq <- merge_phyloseq(trim_tree_physeq, new_arch_root_tree)
+
+ggtree(new_arch_root_physeq) + 
+  geom_tippoint(aes(color = Kingdom))
+
+```
+
+Looks great!
+# Saving our final trimmed-up tree
+
+```{r save-tree}
+
+trim_tree_physeq <- new_arch_root_physeq
+
+save(trim_tree_physeq, file = "data/06_phylogeny_exports/trim_tree_physeq.RData")
+```
+
+# Session Information 
+```{r}
+# Reproducibility
+devtools::session_info()
+```
