@@ -2,6 +2,10 @@
 
 Augustus Pendleton, Mathew G. Wells, and Marian Schmidt
 
+#### DOI Link for this Repo: 
+
+Please find the citeable DOI for this repo on [Zenodo](https://doi.org/10.5281/zenodo.15793805).
+
 #### Link to paper:
 
 Read the manuscript on [BioRxiv](https://www.biorxiv.org/content/10.1101/2025.01.17.633667v1) or access the Manuscript.pdf and SI_Appendix.pdf directly from this repo.
