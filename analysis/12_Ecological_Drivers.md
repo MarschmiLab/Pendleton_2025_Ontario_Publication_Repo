@@ -1,7 +1,7 @@
 ---
 title: "Ecological Drivers (iCAMP)" 
 author: "Augustus Pendleton"
-date: "12 June, 2025"
+date: "02 July, 2025"
 output:
   html_document:
     code_folding: show
@@ -30,21 +30,17 @@ pre code, pre, code {
 
 # Goals of this Document
 
-In this analysis, we use the iCAMP package to infer the evolutionary processes governing community assembly both within our Comp groups and across them. I also spend quite a bit of time plotting my results. 
+In this analysis, we use the iCAMP package to infer the evolutionary processes governing community assembly both within our Comp groups and across them. This is the most computationally demanding section of our analysis - be aware that it takes a long time! Hence, many of these outputs are saved on disk, rather than being run afresh with each render. 
 
 # Load packages 
 
 ```r
-# Efficiently load packages 
+pacman::p_load(phyloseq, patchwork, iCAMP, tidyverse, ggside,  install = FALSE)
 
-pacman::p_load(phyloseq, patchwork, iCAMP, diptest, fitdistrplus,tidyverse, ggside,  install = FALSE)
-
-knitr::write_bib(file = "Whole_Fraction_16S/data/12_ecological_drivers/packages.bib")
+knitr::write_bib(file = "data/12_ecological_drivers/packages.bib")
 
 # load in functions and color preferences
-source("Whole_Fraction_16S/code/R/plotting_aesthetics.R")
-
-source("Whole_Fraction_16S/code/R/notify_me.R")
+source("code/R/plotting_aesthetics.R")
 ```
 
 
@@ -52,7 +48,7 @@ source("Whole_Fraction_16S/code/R/notify_me.R")
 
 
 ```r
-load("Whole_Fraction_16S/data/08_compositional_exports/full_abs_physeq.RData")
+load("data/08_compositional_exports/full_abs_physeq.RData")
 ```
 
 
@@ -98,9 +94,8 @@ tax_table_raw <- tax_table(env_physeq) %>% as.data.frame
 tax_for_icamp <- tax_table_raw[,2:7]
 
 # Set the working directory for our phylogenetic dist matrix
-icamp_wd_env <- "Whole_Fraction_16S/data/12_ecological_drivers/pd_wd_env/"
 
-icamp_wd_env2 <- "Whole_Fraction_16S/data/12_ecological_drivers/pd_wd_env2/"
+icamp_wd_env <- "data/12_ecological_drivers/pd_wd_env/"
 
 # Make sure our Comp-Group_Hier groups match our OTU table
 pools_env <- pool_groups_env$Comp_Group_Hier[match(row.names(asv_mat_env), pool_groups_env$Rep_ID)] %>%
@@ -118,20 +113,15 @@ This is an important step where we create a distance matrix which tracks the phy
 ```r
 pd.big=iCAMP::pdist.big(tree = tree_env, 
                         wd=icamp_wd_env, 
-                        nworker = 30)
+                        nworker = 50)
 
-pd.big2=iCAMP::pdist.big(tree = tree_env, 
-                        wd=icamp_wd_env2, 
-                        nworker = 60)
-
-save(pd.big2, file = "Whole_Fraction_16S/data/12_ecological_drivers/pd.big2.RData")
-notify_me(exists("pd.big2"), message = "it worked")
+save(pd.big, file = "data/12_ecological_drivers/pd.big.RData")
 ```
 
 
 # Environmental dist matrix
 
-In this step, we create a dist matrix using our environmental variables, comparing each sample to every other sample. 
+In this step, we create a dist matrix using our environmental variables, comparing each sample to every other sample. This will then be used later to correlate changes in our abundance within our bins to changes in environmental conditions. 
 
 
 ```r
@@ -141,7 +131,9 @@ niche.dif<-iCAMP::dniche(env = env,
                         nworker = 30,
                         out.dist=FALSE,
                         bigmemo=TRUE,
-                        nd.wd="Whole_Fraction_16S/data/12_ecological_drivers/output_env")
+                        nd.wd="data/12_ecological_drivers/output_env")
+
+save(niche.dif, file = "data/12_ecological_drivers/niche.dif.RData")
 ```
 
 
@@ -157,8 +149,11 @@ We also test using both the RowSums and the RowMeans to aggregate the data acros
 
 
 ```r
-dss <- c(0.1, 0.2, 0.3, 0.4, 0.5)
-bin.size.limits <- c(12, 24, 36, 48, 60)
+load("data/12_ecological_drivers/pd.big.RData")
+load("data/12_ecological_drivers/niche.dif.RData")
+
+dss <- c(0.1, 0.3, 0.5)
+bin.size.limits <- c(24, 48)
 
 combos <- expand_grid(dss, bin.size.limits)
 
@@ -169,7 +164,7 @@ test_binning <- function(ds, bin.size.limit){
                          pd.wd = pd.big$pd.wd, 
                          ds = ds, 
                          bin.size.limit = bin.size.limit,
-                         nworker = 30)
+                         nworker = 50)
     
     sp.bin=phylobin$sp.bin[,3,drop=FALSE]
     
@@ -201,9 +196,6 @@ test_binning <- function(ds, bin.size.limit){
                             Metric = rep(binps$Index$index, 2),
                             Value = c(sum_summaries, mean_summaries)
                )
-
-    notify_me(condition = exists("summaries"),
-              message = paste0("Finished with ds = ", ds, ", bin.size.limit = ", bin.size.limit))
     
     return(summaries)
     
@@ -220,16 +212,13 @@ binning_tests <- map2(
 
 final_results <- list_rbind(binning_tests)
 
-final_results %>%
-  filter(Metric %in% c("RAsig.adj","MeanR")) %>%
-  ggplot(aes(x = tested_ds, 
-             y = Value,
-             color = factor(tested_bin.size.limit))) + 
-  geom_point() + 
-  facet_wrap(Metric ~ Summary,
-             scales = "free_y") +
-  labs(color = "bin.size.limit", x ="ds") + 
-  theme_classic(base_size = 16)
+save(final_results, file = "data/12_ecological_drivers/final_results.RData")
+```
+
+
+
+```r
+load("data/12_ecological_drivers/final_results.RData")
 
 final_results %>%
   filter(Metric %in% c("RAsig.adj","MeanR"),
@@ -245,68 +234,12 @@ final_results %>%
   theme_classic(base_size = 16)
 ```
 
-Okay, so it's not a simple answer, necessarily. It depends whether we want to maximize the proportion of bins with a phylogenetic signal (RAsig.adj) or maximize the Mean R, or both. It's tough! 
-
-I mean, from these results, it really seems like ds = 0.5 and bin.size.limit = 24 might be our strongest. But I'm concerned how at every other bin size we start to lose signal at ds = 0.5. So may 24 and ds = .4 is a safe compromise overall. And that said, bin.size.limit of 36 would reduce our number of bins, which might make downstream analysis easier...and we get almost equal performance. 
+<img src="../figures/12_Ecological_Drivers/plotting-ds-and-binlimits-1.png" style="display: block; margin: auto;" />
 
 # Run iCAMP
 
-This is the major "run" of the analysis. 
-
 
 ```r
-icamp_results_env <- icamp.big(comm = asv_mat_env,
-                           tree = tree_env,
-                           pd.desc = pd.big$pd.file, 
-                           pd.spname=pd.big$tip.label,
-                           pd.wd = pd.big$pd.wd,
-                           rand = 1000,
-                           prefix = "icamp_env_",
-                           ds = .4,
-                           bin.size.limit = 24,
-                           nworker = 30,
-                           detail.save = TRUE,
-                           qp.save = TRUE,
-                           detail.null = TRUE,
-                           output.wd = "Whole_Fraction_16S/data/12_ecological_drivers/output_env",
-                           omit.option = "no",
-                           taxo.metric = "bray",
-                           sig.index = "SES.RC",
-                           ses.cut = 1.96, 
-                           rc.cut = 0.95, 
-                           conf.cut=0.975,
-                           transform.method = NULL)
-
-save(icamp_results_env, file = "Whole_Fraction_16S/data/12_ecological_drivers/icamp_results_env.RData")
-```
-
-
-```r
-icamp_results_maxRA <- icamp.big(comm = asv_mat_env,
-                           tree = tree_env,
-                           pd.desc = pd.big2$pd.file, 
-                           pd.spname=pd.big2$tip.label,
-                           pd.wd = pd.big2$pd.wd,
-                           rand = 1000,
-                           prefix = "icamp_maxRA_",
-                           ds = .3,
-                           bin.size.limit = 48,
-                           nworker = 60,
-                           detail.save = TRUE,
-                           qp.save = TRUE,
-                           detail.null = TRUE,
-                           output.wd = "Whole_Fraction_16S/data/12_ecological_drivers/output_maxRA",
-                           omit.option = "no",
-                           taxo.metric = "bray",
-                           sig.index = "Confidence",
-                           ses.cut = 1.96, 
-                           rc.cut = 0.95, 
-                           conf.cut=0.975,
-                           transform.method = NULL)
-notify_me(exists("icamp_results_maxRA"), message = "icamp run worked")
-save(icamp_results_maxRA, file = "Whole_Fraction_16S/data/12_ecological_drivers/icamp_results_maxRA.RData")
-
-
 icamp_results_ds5_bsl24 <- icamp.big(comm = asv_mat_env,
                            tree = tree_env,
                            pd.desc = pd.big2$pd.file, 
@@ -320,7 +253,7 @@ icamp_results_ds5_bsl24 <- icamp.big(comm = asv_mat_env,
                            detail.save = TRUE,
                            qp.save = TRUE,
                            detail.null = TRUE,
-                           output.wd = "Whole_Fraction_16S/data/12_ecological_drivers/output_ds5_bsl24",
+                           output.wd = "data/12_ecological_drivers/output_ds5_bsl24",
                            omit.option = "no",
                            taxo.metric = "bray",
                            sig.index = "Confidence",
@@ -329,44 +262,8 @@ icamp_results_ds5_bsl24 <- icamp.big(comm = asv_mat_env,
                            conf.cut=0.975,
                            transform.method = NULL)
 
-save(icamp_results_ds5_bsl24, file = "Whole_Fraction_16S/data/12_ecological_drivers/icamp_results_ds5_bsl24.RData")
-
-notify_me(exists("icamp_results_ds5_bsl24"), "iCAMP done")
+save(icamp_results_ds5_bsl24, file = "data/12_ecological_drivers/icamp_results_ds5_bsl24.RData")
 ```
-
-
-# Testing if null values are normal
-
-Next, we check whether our null values follow a normal distribution. If they don't, we'll want to switch our sig.index to "Confidence"
-
-
-```r
-nntest <- null.norm(icamp.output=icamp_results_env, p.norm.cut=0.05, detail.out=FALSE)
-
-
-nntest %>%
-  pluck("summary") %>%
-  pivot_longer(Anderson.Pnonorm:Shapiro.Pnonorm, names_to = "Metric", values_to = "Ratio") %>%
-  ggplot(aes(x = Ratio)) +
-  geom_histogram() + 
-  facet_wrap(~Metric)
-```
-
-These plots show the ratio of turnovers in each bin that significantly deviated from normal distributions, over five different tests for normality. Clearly most do deviate. As such, we shouldn't use the classical SES.RC sig.index.
-
-# Switching our confidence approach
-
-
-```r
-icamp_good_sig <- change.sigindex(icamp.output = icamp_results_env, 
-                                  sig.index = "Confidence", 
-                                  detail.save = TRUE, 
-                                  detail.null = FALSE, 
-                                  conf.cut = 0.975)
-save(icamp_good_sig, file = "Whole_Fraction_16S/data/12_ecological_drivers/icamp_good_sig.RData")
-```
-
-Okay - now I feel a little more confident (pun lol). Let's go ahead and calculate bin level statistics while we're at it. 
 
 # Calculating bin-level statistics
 
@@ -380,31 +277,6 @@ Now, we feed our icamp results into a function that will do several things at on
 
 
 ```r
-icamp_bin <- icamp.bins(icamp.detail = icamp_good_sig$detail,
-                        treat = pools_env,
-                        clas=tax_for_icamp,
-                        silent=FALSE, 
-                        boot = TRUE,
-                        rand.time = 1000,
-                        between.group = TRUE)
-
-
-save(icamp_bin,
-     file = "Whole_Fraction_16S/data/12_ecological_drivers/icamp_bin.rda")
-
-icamp_bin_maxRA <- icamp.bins(icamp.detail = icamp_results_maxRA$detail,
-                        treat = pools_env,
-                        clas=tax_for_icamp,
-                        silent=FALSE, 
-                        boot = TRUE,
-                        rand.time = 1000,
-                        between.group = TRUE)
-
-
-save(icamp_bin_maxRA,
-     file = "Whole_Fraction_16S/data/12_ecological_drivers/icamp_bin_maxRA.rda")
-
-
 icamp_bin_ds5_bsl24 <- icamp.bins(icamp.detail = icamp_results_ds5_bsl24$detail,
                         treat = pools_env,
                         clas=tax_for_icamp,
@@ -415,27 +287,7 @@ icamp_bin_ds5_bsl24 <- icamp.bins(icamp.detail = icamp_results_ds5_bsl24$detail,
 
 
 save(icamp_bin_ds5_bsl24,
-     file = "Whole_Fraction_16S/data/12_ecological_drivers/icamp_bin_ds5_bsl24.rda")
-
-notify_me(exists("icamp_bin_maxRA"), message = "finished bin level stats")
-```
-
-## Bootstrapping for significance
-
-
-```r
-i=1
-set.seed(31491)
-
-bootstrap <- icamp.boot(icamp.result = icamp_good_sig$CbMPDiCBraya,
-                         treat = pools_env,
-                         rand.time = 1000,
-                         compare = TRUE,
-                         silent = FALSE,
-                         between.group = TRUE,
-                         ST.estimation = TRUE)
-
-glimpse(bootstrap$summary)
+     file = "data/12_ecological_drivers/icamp_bin_ds5_bsl24.rda")
 ```
 
 ## Analysis
@@ -444,85 +296,17 @@ Now let's analyze some of these results
 
 
 ```r
-#load("Whole_Fraction_16S/data/12_ecological_drivers/icamp_good_sig.RData")
-#load("Whole_Fraction_16S/data/12_ecological_drivers/icamp_bin.rda")
-#load("Whole_Fraction_16S/data/12_ecological_drivers/icamp_results_ds5_bsl24.RData")
-load("Whole_Fraction_16S/data/12_ecological_drivers/icamp_bin_ds5_bsl24.rda")
+load("data/12_ecological_drivers/icamp_bin_ds5_bsl24.rda")
 ```
 
+## Figure 3A/B
 
-
-First, the most dominant processes in each group/comparison
+In this figure, we make treemap plots for the relative contribution of each class to each process within each group. We also scale the area of each process by its relative importance. There isn't a very good way to do this in R. So what I've done is exported each of the mini treemaps as its own separate plot into a folder call tree_panels, and then scaled and arranged them in Illustrator to produce Figure 3A.
 
 
 ```r
 icamp_bin <- icamp_bin_ds5_bsl24
 
-icamp_Pt <- icamp_bin$Pt
-
-
-clean_icamp_Pt <- icamp_Pt %>%
-  pivot_longer(HeS:DR, names_to = "Process", values_to = "Contribution") %>%
-  mutate(Contribution = as.numeric(Contribution),
-         Comps = case_when(Group %in% c("Deep", "Shallow_May", "Shallow_September") ~ "Within",
-                           TRUE ~ "Across"),
-         Comps = factor(Comps, levels = c("Within","Across"),
-                        labels = c("Within Group", "Across Groups")),
-         Group = str_replace_all(Group, pattern = "_", replacement = "\n"),
-         Process = factor(Process,
-                          levels = c("HoS","HeS","DL","HD","DR"),
-                          labels = c("Homogenizing Selection",
-                                     "Heterogeneous Selection",
-                                     "Dispersal Limitation",
-                                     "Homogenizing Dispersal",
-                                     "Drift")))
-
-
-
-icamp_heatmap <- clean_icamp_Pt %>% 
-  mutate(Group = factor(Group, levels = c("Deep",
-                              "Shallow\nMay",
-                              "Shallow\nSeptember",
-                              "Deep\nvs\nShallow\nMay",
-                              "Deep\nvs\nShallow\nSeptember",
-                              "Shallow\nMay\nvs\nShallow\nSeptember"))) %>%
-  ggplot(aes(x = Group, 
-             y = Process, 
-             fill = Contribution, 
-             label = round(Contribution, digits = 2))) + 
-  geom_tile() + 
-  geom_text(aes(color = Contribution > 0.1)) + 
-  facet_wrap(~Comps, scales = "free_x") + 
-  scale_fill_gradient(low = "white", high = "#E6550D") + 
-  scale_color_manual(values = c("#FEE6CE", "black")) + 
-  theme(legend.position = "none",
-        strip.text = element_text(size = 14),
-        axis.title.y = element_blank(),
-        axis.title.x = element_blank()) 
-
-icamp_heatmap
-```
-
-<img src="../figures/12_Ecological_Drivers/dominant-processes-1.png" style="display: block; margin: auto;" />
-
-Some takeaways for within-group comparisons:
-
-1. Drift is the strongest force in Deep and Shallow May, followed by homogenizing selection
-2. Homogenizing selection is strongest in Shallow Sept
-3. Dispersal limitation is strongest within deep samples
-
-Some takeaways for between-group comparisons:
-
-1. Shallow september remains strongly defined by homogenizing selection, which isn't as important in differentiating Shallow May and Deep samples
-2. Dispersal limitation is highest between Deep and Shallow September -> implying the physical separation via the thermocline
-3. Heterogenous selection is highest in Deep vs. Shallow May -> community "expansion" early in the year as shallow communities are formed from "Deep" communities?
-
-
-
-## Contribution of each bin to each process
-
-
-```r
 bptk <- icamp_bin$BPtk
 
 bin_classes <- icamp_bin$Bin.TopClass %>% 
@@ -540,72 +324,9 @@ important_class <- labeled_bptk %>%
   summarize(max_cont = max(Contribution)) %>%
   filter(max_cont > 0.01) %>%
   pull(Class)
-
-
-
-
-labeled_bptk %>%
-  mutate(Class = ifelse(Class %in% important_class, Class, "Rare")) %>%
-  filter(!(Group %in% c("Deep","Shallow_September","Shallow_May")),
-         Process %in% c("HoS","DR","DL")) %>%
-  group_by(Group, Process, Class) %>%
-  summarize(Contribution = sum(Contribution)) %>%
-  mutate(Group = str_replace_all(Group, "_", "\n"),
-         Process = case_match(Process,
-                              "DL" ~ "Dispersal Limitation",
-                              "HoS" ~ "Homogenizing Selection",
-                              "DR" ~ "Drift"),
-         Process = factor(Process, levels = c("Homogenizing Selection",
-                                              "Dispersal Limitation",
-                                              "Drift"))) %>%
-  ggplot(aes(area = Contribution, fill = Class, label = ifelse(round(Contribution, 2) == 0,
-                                                               "", 
-                                                               round(Contribution, 2)))) + 
-  treemapify::geom_treemap(start = "topleft") + 
-  treemapify::geom_treemap_text(aes(color = Class == "Anaerolineae"),
-                                place = "center", start = "topleft") + 
-  scale_color_manual(values = c("black","white")) + 
-  scale_fill_manual(values = class_colors) +
-  facet_grid(Group ~ Process,
-             switch = "y") + 
-  theme(strip.text.y.left = element_text(angle = 0),
-        legend.background = element_rect(color = "white"))
 ```
 
-<img src="../figures/12_Ecological_Drivers/bars-with-taxa-1.png" style="display: block; margin: auto;" />
-
-```r
-labeled_bptk %>%
-  mutate(Class = ifelse(Class %in% important_class, Class, "Rare")) %>%
-  filter(!(Group %in% c("Deep","Shallow_September","Shallow_May")),
-         Process %in% c("HoS","DR","DL")) %>%
-  group_by(Group, Process, Class) %>%
-  summarize(Contribution = sum(Contribution)) %>%
-  mutate(Group = str_replace_all(Group, "_", "\n"),
-         Process = case_match(Process,
-                              "DL" ~ "Dispersal Limitation",
-                              "HoS" ~ "Homogenizing Selection",
-                              "DR" ~ "Drift"),
-         Process = factor(Process, levels = c("Homogenizing Selection",
-                                              "Dispersal Limitation",
-                                              "Drift"))) %>%
-  ggplot(aes(area = Contribution, fill = Class, label = ifelse(round(Contribution, 2) == 0,
-                                                               "", 
-                                                               round(Contribution, 2)))) + 
-  treemapify::geom_treemap(start = "topleft") + 
-  #treemapify::geom_treemap_text(aes(color = Class == "Anaerolineae"),
-  #                              place = "center", start = "topleft") + 
-  scale_color_manual(values = c("black","white")) + 
-  scale_fill_manual(values = class_colors) +
-  facet_grid(Group ~ Process,
-             switch = "y") + 
-  theme(strip.text.y.left = element_text(angle = 0),
-        legend.background = element_rect(color = "white"))
-```
-
-<img src="../figures/12_Ecological_Drivers/bars-with-taxa-2.png" style="display: block; margin: auto;" />
-
-What if we want to scale by overall process importance? 
+Here, we export panels for across-group comparisons, which together create Figure 3B
 
 
 ```r
@@ -629,12 +350,13 @@ tree_plots <- labeled_bptk %>%
            )
   )
 
+# These are the panels which go into Figure 3A
 for(i in 1:nrow(tree_plots)){
   ggsave(tree_plots$plots[[i]], 
-         filename = paste("Whole_Fraction_16S/figures/12_Ecological_Drivers/tree_panels/",
+         filename = paste("figures/12_Ecological_Drivers/tree_panels/",
                           paste(tree_plots$Process[i], tree_plots$Group[i], sep = "_"),
          ".png"),
-         width = 1, height = 1, units = "in")
+         width = 1, height = 1, units = "in", create.dir = TRUE)
 }
 
 # Finding average heights
@@ -669,6 +391,8 @@ for(i in 1:nrow(tree_plots)){
 ## 9 Shallow_May_vs_Shallow_September Homogenizing Selection       0.552  1               1
 ```
 
+Here, we export panels for within-group turnovers, which together create Figure 3A
+
 
 ```r
 tree_plots <- labeled_bptk %>%
@@ -693,10 +417,10 @@ tree_plots <- labeled_bptk %>%
 
 for(i in 1:nrow(tree_plots)){
   ggsave(tree_plots$plots[[i]], 
-         filename = paste("Whole_Fraction_16S/figures/12_Ecological_Drivers/tree_panels_within_group/",
+         filename = paste("figures/12_Ecological_Drivers/tree_panels_within_group/",
                           paste(tree_plots$Process[i], tree_plots$Group[i], sep = "_"),
          ".png"),
-         width = 1, height = 1, units = "in")
+         width = 1, height = 1, units = "in", create.dir = TRUE)
 }
 
 # Finding average heights
@@ -740,7 +464,9 @@ for(i in 1:nrow(tree_plots)){
 ## 18 Shallow_September                Homogenizing Selection       0.672  1                1
 ```
 
-## Importance of each process for each bin
+## Figure 3B: Relating bin abundance/variation to assembly process
+
+In this section, I look at the overall abundance of each bin, and its coefficient of variation, and relate that to the dominant process which influences assembly within that bin. 
 
 
 ```r
@@ -770,17 +496,6 @@ all_bin_process <- bin_dom_procsses %>%
   unite(DL:HeS, col = "DominantProcess", sep = "/", na.rm = TRUE) %>%
   select(Bin, DominantProcess) %>%
   rbind(bins_w_one_dom)
-#OR 
-bins_for_pie <- Ptk %>% 
-  filter(Index == "DominantProcess") %>%
-  pivot_longer(bin1:bin130, names_to = "Bin", values_to = "DominantProcess") %>% 
-  select(Group : DominantProcess) %>%
-  filter(!DominantProcess == "") %>%
-  mutate(present = 1) %>%
-  pivot_wider(names_from = DominantProcess, values_from = present, values_fill = 0) %>%
-  select(Bin, DL:HD) %>%
-  group_by(Bin) %>%
-  summarize(across(DL:HD, sum))
 ```
 
 Now, let's calculate the average and maximum total abundance of each bin
@@ -809,94 +524,8 @@ bin_summarized_abunds <- bin_sample_abunds %>%
             mean_abund = mean(bin_sample_abund),
             median_abund = median(bin_sample_abund),
             variance = sd(bin_sample_abund) / mean_abund)
-
-
-bin_summarized_abunds %>%
-  left_join(all_bin_process) %>%
-  ggplot(aes(x = mean_abund, y = max_abund, color = DominantProcess, fill = DominantProcess)) + 
-  geom_point(size = 3, alpha = 0.7) + 
-  ggside::geom_ysidedensity(data = . %>% filter(DominantProcess %in% c("DL", "DL/DR","DR","HoS")), alpha = 0.2) + 
-   ggside::geom_xsidedensity(data = . %>% filter(DominantProcess %in% c("DL", "DL/DR","DR","HoS")), alpha = 0.2) + 
-  scale_y_continuous(transform = "log10", labels = scales::label_comma()) +  
-  scale_x_continuous(transform = "log10", labels = scales::label_comma()) +
-  guides(x = guide_axis(check.overlap = TRUE)) + 
-  scale_color_manual(values = process_colors) + 
-  scale_fill_manual(values = process_colors) + 
-  labs(x = "Average Abundance of Bin",
-       y = "Max Abundance of Bin") + 
-  theme(legend.position = "inside",
-        legend.position.inside = c(0.75, 0.25))
 ```
 
-<img src="../figures/12_Ecological_Drivers/abund_prev_process_abs-1.png" style="display: block; margin: auto;" />
-
-
-
-```r
-bin_summarized_abunds %>%
-  left_join(all_bin_process) %>%
-  filter(DominantProcess %in% c("DL", "DL/DR","DR","HoS")) %>%
-  ggplot(aes(x = mean_abund, y = max_abund, color = DominantProcess, fill = DominantProcess)) + 
-  geom_point(size = 3, alpha = 0.7) + 
-  geom_ysidedensity(alpha = 0.2) + 
-  scale_x_continuous(transform = "log10", labels = scales::label_comma()) +
-  scale_y_continuous(transform = "log10", labels = scales::label_comma()) +
-  guides(x = guide_axis(check.overlap = TRUE)) + 
-  scale_color_manual(values = process_colors,
-                     breaks = c("HoS","DR","DL/DR","DL"),
-                     labels = c("Homogenizing\nSelection",
-                                "Drift",
-                                "Dispersal Limitation/\nDrift",
-                                "Dispersal Limitation")) + 
-  scale_fill_manual(values = process_colors,
-                    breaks = c("HoS","DR","DL/DR","DL"),
-                     labels = c("Homogenizing\nSelection",
-                                "Drift",
-                                "Dispersal Limitation/\nDrift",
-                                "Dispersal Limitation")) + 
-  labs(x = "Average Abundance of Bin",
-       y = "Max Abundance of Bin") + 
-  theme(legend.position = "inside",
-        legend.position.inside = c(0.65, 0.25),
-        ggside.panel.scale = 0.2) + 
-  scale_ysidex_continuous(labels = NULL)
-```
-
-<img src="../figures/12_Ecological_Drivers/clean-abs-abund-vs-avg-abund-1.png" style="display: block; margin: auto;" />
-
-
-
-```r
-bin_summarized_abunds %>%
-  left_join(all_bin_process) %>%
-  filter(DominantProcess %in% c("DL", "DL/DR","DR","HoS")) %>%
-  ggplot(aes(x = median_abund, y = max_abund, color = DominantProcess, fill = DominantProcess)) + 
-  geom_point(size = 3, alpha = 0.7) + 
-  geom_ysidedensity(alpha = 0.2) + 
-  scale_x_continuous(transform = "log10", labels = scales::label_comma()) +
-  scale_y_continuous(transform = "log10", labels = scales::label_comma()) +
-  guides(x = guide_axis(check.overlap = TRUE)) + 
-  scale_color_manual(values = process_colors,
-                     breaks = c("HoS","DR","DL/DR","DL"),
-                     labels = c("Homogenizing\nSelection",
-                                "Drift",
-                                "Dispersal Limitation/\nDrift",
-                                "Dispersal Limitation")) + 
-  scale_fill_manual(values = process_colors,
-                    breaks = c("HoS","DR","DL/DR","DL"),
-                     labels = c("Homogenizing\nSelection",
-                                "Drift",
-                                "Dispersal Limitation/\nDrift",
-                                "Dispersal Limitation")) + 
-  labs(x = "Median Abundance of Bin",
-       y = "Max Abundance of Bin") + 
-  theme(legend.position = "inside",
-        legend.position.inside = c(0.65, 0.25),
-        ggside.panel.scale = 0.2) + 
-  scale_ysidex_continuous(labels = NULL)
-```
-
-<img src="../figures/12_Ecological_Drivers/clean-abs-abund-vs-median-abund-1.png" style="display: block; margin: auto;" />
 
 
 ```r
@@ -939,7 +568,7 @@ bin_summarized_abunds %>%
         legend.box.background = element_blank())
 ```
 
-<img src="../figures/12_Ecological_Drivers/clean-abs-abund-vs-var-abund-1.png" style="display: block; margin: auto;" />
+<img src="../figures/12_Ecological_Drivers/FIGURE-3C-1.png" style="display: block; margin: auto;" />
 
 ```r
 filt_bin <- bin_summarized_abunds %>%
@@ -956,312 +585,10 @@ cor.test(filt_bin$max_abund,
 ## 	Spearman's rank correlation rho
 ## 
 ## data:  filt_bin$max_abund and filt_bin$variance
-## S = 549342, p-value = 2.968e-14
+## S = 549732, p-value = 2.58e-14
 ## alternative hypothesis: true rho is not equal to 0
 ## sample estimates:
 ##        rho 
-## -0.6092001
-```
-
-
-```r
-bin_genuses <- icamp_bin$Bin.TopClass %>% 
-  mutate(Bin = tolower(Bin))
-
-
-genus_bptk <- bptk %>%
-  pivot_longer(bin1:bin130, names_to = "Bin", values_to = "Contribution") %>%
-  left_join(bin_classes) %>%
-  dplyr::rename(Class = Class.maxNamed)
-
-bin_classes <- labeled_bptk %>%
-  mutate(Class = ifelse(Class %in% important_class, Class, "Rare")) %>%
-  select(Bin, Class) %>%
-  distinct()
-
-bin_summarized_abunds %>%
-  left_join(all_bin_process) %>%
-  left_join(bin_genuses) %>%
-  left_join(bin_classes) %>%
-  filter(DominantProcess %in% c("DL", "DL/DR","DR","HoS")) %>%
-  ggplot(aes(x = variance, y = max_abund, label = Genus.maxNamed, color = Class, fill = Class)) + 
-  ggrepel::geom_text_repel()+
-  geom_point(size = 3, alpha = 0.7) + 
-  facet_wrap(~DominantProcess) + 
-  scale_x_continuous(transform = "log10", labels = scales::label_comma()) +
-  scale_y_continuous(transform = "log10", labels = scales::label_comma()) +
-  guides(x = guide_axis(check.overlap = TRUE)) + 
-  scale_color_manual(values = class_colors) + 
-  scale_fill_manual(values = class_colors) + 
-  labs(x = "Coefficient of Variation",
-       y = "Max Abundance")
-```
-
-<img src="../figures/12_Ecological_Drivers/abs-abund-vs-var-facet-process-1.png" style="display: block; margin: auto;" />
-
-```r
-#That's one option. Let's consider another
-
-bin_summarized_abunds %>%
-  left_join(all_bin_process) %>%
-  left_join(bin_genuses) %>%
-  filter(TopTaxon.Phylum %in% c("Proteobacteria","Actinobacteriota", "Bacteroidota", "Chloroflexi", "Cyanobacteria","Verrucomicrobiota")) %>%
-  filter(DominantProcess %in% c("DL", "DL/DR","DR","HoS")) %>%
-  mutate(tax_label = case_when(!is.na(TopTaxon.Genus) ~ TopTaxon.Genus,
-                               !is.na(TopTaxon.Family) ~ paste("F: ", TopTaxon.Family),
-                               !is.na(TopTaxon.Order) ~  paste("O: ", TopTaxon.Order),
-                               !is.na(TopTaxon.Class) ~  paste("C: ", TopTaxon.Class),
-                               !is.na(TopTaxon.Phylum) ~ paste("P: ", TopTaxon.Phylum))) %>% 
-  ggplot(aes(x = variance, y = max_abund, color = DominantProcess, fill = DominantProcess, label = tax_label)) + 
-  geom_point(size = 1, alpha = 0.7) + 
-  ggrepel::geom_text_repel(show.legend = FALSE, size = 1.5)+ 
-  facet_wrap(~TopTaxon.Phylum, ncol = 2) + 
-  scale_x_continuous(transform = "log10", labels = scales::label_comma()) +
-  scale_y_continuous(transform = "log10", labels = scales::label_comma()) +
-  scale_color_manual(values = process_colors,
-                     breaks = c("HoS","DR","DL/DR","DL"),
-                     labels = c("Homogenizing\nSelection",
-                                "Drift",
-                                "Dispersal Limitation/\nDrift",
-                                "Dispersal Limitation")) + 
-  scale_fill_manual(values = process_colors,
-                    breaks = c("HoS","DR","DL/DR","DL"),
-                     labels = c("Homogenizing\nSelection",
-                                "Drift",
-                                "Dispersal Limitation/\nDrift",
-                                "Dispersal Limitation")) + 
-  labs(x = "Coefficient of Variation",
-       y = "Max Abundance",
-       fill = "Dominant Process") + 
-  theme(legend.position = "none",
-        axis.title = element_text(size = 9),
-        axis.text = element_text(size = 8),
-        strip.text = element_text(size = 8))
-```
-
-<img src="../figures/12_Ecological_Drivers/abs-abund-vs-var-facet-process-2.png" style="display: block; margin: auto;" />
-
-
-```r
-melted_asv_rel <- full_abs_physeq %>%
-  transform_sample_counts(function(x) x / sum(x) ) %>%
-  psmelt() %>%
-  select(ASV, Abundance, Rep_ID)
-
-bin_sample_abunds_rel <- melted_asv_rel %>%
-  left_join(bin_assignments) %>% 
-  filter(!is.na(Bin)) %>%
-  group_by(Bin, Rep_ID) %>%
-  summarize(bin_sample_abund = sum(Abundance)) %>%
-  ungroup()
-
-# Just check that they still add up to one
-bin_sample_abunds_rel %>%
-  group_by(Rep_ID) %>%
-  summarize(sum(bin_sample_abund)) %>% head(6)
-```
-
-```
-## # A tibble: 6 × 2
-##   Rep_ID   `sum(bin_sample_abund)`
-##   <chr>                      <dbl>
-## 1 May_12_B                       1
-## 2 May_12_E                       1
-## 3 May_12_M                       1
-## 4 May_17_E                       1
-## 5 May_29_B                       1
-## 6 May_29_E                       1
-```
-
-```r
-# Oay now summarize
-bin_summarized_abunds_rel <- bin_sample_abunds_rel %>%
-  group_by(Bin) %>%
-  summarize(max_abund = max(bin_sample_abund),
-            mean_abund = mean(bin_sample_abund),
-            variance = sd(bin_sample_abund))
-
-
-bin_summarized_abunds_rel %>%
-  left_join(all_bin_process) %>%
-  ggplot(aes(x = mean_abund, y = max_abund, color = DominantProcess, fill = DominantProcess)) + 
-  geom_point(size = 3, alpha = 0.7) + 
-  geom_ysidedensity(data = . %>% filter(DominantProcess %in% c("DL", "DL/DR","DR","HoS")), alpha = 0.2) + 
-  geom_xsidedensity(data = . %>% filter(DominantProcess %in% c("DL", "DL/DR","DR","HoS")), alpha = 0.2) + 
-  scale_y_continuous(transform = "log10", labels = scales::label_comma()) +  
-  scale_x_continuous(transform = "log10", labels = scales::label_comma()) +
-  guides(x = guide_axis(check.overlap = TRUE)) + 
-  scale_color_manual(values = process_colors) + 
-  scale_fill_manual(values = process_colors) + 
-  labs(x = "Average Abundance of Bin",
-       y = "Max Abundance of Bin") + 
-  theme(legend.position = "inside",
-        legend.position.inside = c(0.75, 0.25))
-```
-
-<img src="../figures/12_Ecological_Drivers/abund_prev_process_rel-1.png" style="display: block; margin: auto;" />
-
-It looks almost exactly the same, which at least doesn't complicate this too much. We can stick with absolute abundances
-
-
-```r
-icamp_bin$Ptuv %>% 
-  filter(samp1 == "September_38_E"|samp2=="September_38_E",
-         !str_detect(samp1, "May")) %>%
-  select(HeS:DR) %>%
-  colMeans()
-```
-
-```
-##        HeS        HoS         DL         HD         DR 
-## 0.00506093 0.44513750 0.30475889 0.02295202 0.22209066
-```
-
-
-## Species Distribution Analysis
-
-
-```r
-asv_mat <- full_abs_physeq %>%
-  otu_table() %>%
-  as.matrix()
-
-trans_mat <- log10(asv_mat + 1)
-
-asv_vals <- asplit(trans_mat, 2)
-```
-
-Next, we test for bimodality
-
-
-```r
-# This takes awhile :/
-# dt_results <- map(asv_vals, dip.test, simulate.p.value = TRUE, B = 2000)
-# # 
-# save(dt_results, file = "Whole_Fraction_16S/data/12_ecological_drivers/dt_results.RData")
-
-load("Whole_Fraction_16S/data/12_ecological_drivers/dt_results.RData")
-
-p_values <- map_dbl(dt_results, \(x)x$p.value)
-
-bimod_asvs <- names(p_values)[p_values<0.01]
-
-unimod_mat <- trans_mat[, !(colnames(trans_mat) %in% bimod_asvs)]
-```
-
-Next, we test for the best fits from for other distributions
-
-
-```r
-unimod_list <- asplit(unimod_mat, 2)
-
-dist_names <- c("Normal", "Logistic", "Exponential")
-dists_to_test <- c("norm","logis","exp")
-
-names(dists_to_test) <- dist_names
-
-test_fit <- function(name, values, dists){
-  aics <- map_dbl(dists, \(dist){
-    
-    model <- tryCatch(
-      expr = {
-        fitdist(as.numeric(values), dist)
-      },
-      error = function(e){list(aic = Inf)}
-    )
-    
-    return(model$aic)
-  })
-  
-  as_tibble_row(aics) %>%
-    mutate(ASV = name)
-}
-
-test_fit(names(unimod_list)[1], unimod_list[[1]], dists_to_test)
-model_fits <- map2(unimod_list, names(unimod_list), 
-     \(x,y)test_fit(name = y, values = x, dists = dists_to_test)) %>%
-  list_rbind(names_to = "ASV")
-```
-
-
-Now, we pull out the top model fits
-
-
-```r
-top_models <- model_fits %>%
-  pivot_longer(Normal:Exponential, names_to = "Model", values_to = "AIC") %>%
-  group_by(ASV) %>%
-  slice_min(AIC) %>% 
-  ungroup() %>%
-  dplyr::select(-AIC)
-
-top_models %>%
-  count(Model)
-```
-
-Combine our unimodal and bimodal data
-
-
-```r
-bi_df <- data.frame(ASV = bimod_asvs,
-                    Model = "Bimodal")
-
-all_models <- rbind(top_models, bi_df)
-```
-
-Then, let's calculate max abundances and prevalences
-
-
-```r
-abunds <- data.frame(Total_Abundance = taxa_sums(full_abs_physeq),
-           ASV = names(taxa_sums(full_abs_physeq)))
-
-samples <- nrow(asv_mat)
-
-prev_vec <- colSums(asv_mat> 0) / samples
-
-prevalences <- data.frame(Prevalence = prev_vec,
-                          ASV = names(prev_vec))
-
-models_with_abund <- all_models %>%
-  left_join(abunds) %>%
-  left_join(prevalences)
-```
-
-And plot!
-
-
-```r
-models_with_abund %>%
-  mutate(prop = 1 / n()) %>%
-  group_by(Model) %>%
-  summarize(Cum_Prop = sum(prop)) %>%
-  ggplot(aes(x = Model, y = Cum_Prop * 100)) + 
-  geom_col() +
-  labs(x = "Model", y = "Cumulative Percentage") + 
-  theme_classic()
-
-models_with_abund %>%
-  mutate(prop_abund = Total_Abundance / sum(Total_Abundance)) %>%
-  group_by(Model) %>%
-  summarize(Cum_Prop = sum(prop_abund)) %>%
-  ggplot(aes(x = Model, y = Cum_Prop * 100)) + 
-  geom_col() +
-  labs(x = "Model", y = "Cumulative Percentage of Abundance") + 
-  theme_classic()
-
-
-models_with_abund %>%
-  mutate(Model = factor(Model, 
-                        levels = c("Normal","Logistic","Bimodal","Exponential"))) %>%
-  ggplot(aes(x = Total_Abundance,
-             y = Prevalence,
-             color = Model)
-  ) + 
-  geom_jitter(alpha = 0.6) + 
-  scale_x_log10() + 
-  labs(x = "Total Abundance",
-       y = "Prevalence",
-       color = "Best-Fit Model")
+## -0.6103426
 ```
 
