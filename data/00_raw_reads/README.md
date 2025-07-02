@@ -1,0 +1,1 @@
+This is the folder where you should download sequencing reads
