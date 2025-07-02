@@ -12,7 +12,7 @@ Augustus Pendleton, Mathew Wells, and Marian Schmidt
 
 #### Link to paper:
 
-[Read the manuscript on [BioRxiv](https://www.biorxiv.org/content/10.1101/2025.01.17.633667v1) or access the Manuscript.pdf and SI_Appendix.pdf directly from this repo.
+Read the manuscript on [BioRxiv](https://www.biorxiv.org/content/10.1101/2025.01.17.633667v1) or access the Manuscript.pdf and SI_Appendix.pdf directly from this repo.
 
 #### Description of this repo:
 
