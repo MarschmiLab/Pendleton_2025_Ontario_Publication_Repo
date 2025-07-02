@@ -9,3 +9,4 @@ data/06_phylogeny_exports/aligned_asvs.fasta
 data/02_taxonomy_exports/silva*
 data/05_metadata_exports/SeabirdData/202305_SeabirdData/Combined*
 data/05_metadata_exports/SeabirdData/202310_SeabirdData/Combined*
+data/13_hydrodynamics/glatos_moorings
