@@ -1,6 +1,10 @@
 ## Code and Data for "Upwelling periodically disturbs the ecological assembly of microbial communities in the Laurentian Great Lakes"
 
-Augustus Pendleton, Mathew Wells, and Marian Schmidt
+Augustus Pendleton, Mathew G. Wells, and Marian Schmidt
+
+#### Link to paper:
+
+Read the manuscript on [BioRxiv](https://www.biorxiv.org/content/10.1101/2025.01.17.633667v1) or access the Manuscript.pdf and SI_Appendix.pdf directly from this repo.
 
 #### Abstract
 
@@ -9,10 +13,6 @@ Augustus Pendleton, Mathew Wells, and Marian Schmidt
 #### Significance Statement
 
     The Laurentian Great Lakes hold 21% of the world’s surface freshwater and nearly 85% of North America’s—supplying drinking water to over 40 million people. Yet the microbial life that underpins their ecological function remains poorly understood. We show that wind-driven upwelling, followed by internal Kelvin waves that redistribute and sustain upwelling, acts as a recurring physical disturbance that overrides thermal stratification, redistributing rare microbes and assembling novel shoreline communities. These shifts bring unexpected functional changes, including enrichment of methane oxidation and sulfur metabolism genes, where people most interact with lake water. As climate change reshapes large lake circulation and intensifies thermal layering, understanding how microbial ecosystems respond is essential for forecasting transformations in water quality, ecosystem function, and biogeochemical resilience.
-
-#### Link to paper:
-
-Read the manuscript on [BioRxiv](https://www.biorxiv.org/content/10.1101/2025.01.17.633667v1) or access the Manuscript.pdf and SI_Appendix.pdf directly from this repo.
 
 #### Description of this repo:
 
