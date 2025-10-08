@@ -1,7 +1,7 @@
 ---
 title: "Ecological Drivers (iCAMP)" 
 author: "Augustus Pendleton"
-date: "02 July, 2025"
+date: "08 October, 2025"
 output:
   html_document:
     code_folding: show
@@ -592,3 +592,350 @@ cor.test(filt_bin$max_abund,
 ## -0.6103426
 ```
 
+# Calculating Base Metrics
+
+iCAMP relies on measures of phylogenetic relatedness (here, bMPD) and taxonomic similarity (here, Raup-Crick based on Bray-Curtis). These metrics, and their interpretation, are well established in the literature. iCAMP's addition is the phylogenetic binning and subsequent averaging. But it seems useful to also test these metrics more simply, without the added steps of phylogenetic binning. 
+
+
+```r
+plain_pd <- iCAMP::pdist.p(tree = tree_env, 
+                        nworker = 30,
+                        memory.G = 200)
+
+save(plain_pd, file = "data/12_ecological_drivers/plain_pd.RData", compress = TRUE)
+```
+
+Calculate bNTI and bNRI
+
+
+```r
+bnri_conf <- 
+  bNRIn.p(comm = rel_mat,
+        dis = plain_pd, 
+        nworker = 30,
+        memo.size.GB = 200,
+        weighted = TRUE,
+        rand = 1000, 
+        output.bMPD = TRUE,
+        sig.index = "Confidence"
+        )
+
+bnri_bnri <- 
+  bNRIn.p(comm = rel_mat,
+        dis = plain_pd, 
+        nworker = 30,
+        memo.size.GB = 200,
+        weighted = TRUE,
+        rand = 1000, 
+        output.bMPD = TRUE,
+        sig.index = "bNRI"
+        )
+
+bnti_bnti <- 
+  bNTIn.p(comm = rel_mat,
+        dis = plain_pd, 
+        nworker = 30,
+        memo.size.GB = 200,
+        weighted = TRUE,
+        rand = 1000, 
+        output.bMNTD = TRUE,
+        sig.index = "bNTI")
+
+bnti_conf <- 
+  bNTIn.p(comm = rel_mat,
+        dis = plain_pd, 
+        nworker = 30,
+        memo.size.GB = 200,
+        weighted = TRUE,
+        rand = 1000, 
+        output.bMNTD = TRUE,
+        sig.index = "Confidence")
+```
+
+Okay, now looking at taxonomic similarities
+
+
+```r
+rc_conf <- 
+  RC.pc(comm = rel_mat,
+      rand = 1000, 
+      na.zero = TRUE, 
+      nworker = 30,
+      memory.G = 200,
+      weighted = TRUE,
+      unit.sum = NULL,
+      sig.index = "Confidence",
+      taxo.metric = "bray"
+)
+
+rc_rc <- 
+  RC.pc(comm = rel_mat,
+      rand = 1000, 
+      na.zero = TRUE, 
+      nworker = 30,
+      memory.G = 200,
+      weighted = TRUE,
+      unit.sum = NULL,
+      sig.index = "RC",
+      taxo.metric = "bray"
+)
+
+
+measures <- list(bNRI_ses = bnri_bnri,
+                 bNRI_conf = bnri_conf,
+                 bNTI_ses = bnti_bnti,
+                 bNTI_conf = bnti_conf,
+                 rc_ses = rc_rc,
+                 rc_conf = rc_conf)
+
+save(measures, file = "data/12_ecological_drivers/measures.RData")
+```
+
+Cleaning and comparing our measures
+
+
+
+```r
+load("data/12_ecological_drivers/measures.RData")
+
+clean_dfs <- 
+  map2(measures, names(measures), \(x, y) {
+  mat <- x$index %>%
+    as.matrix()
+  
+  mat[upper.tri(mat, diag = TRUE)] <- NA
+  
+  clean_df <-
+    mat %>%
+    as.data.frame() %>%
+    mutate(Sam1 = row.names(.)) %>%
+    pivot_longer(cols = !Sam1,
+                 names_to = "Sam2",
+                 values_to = y) %>%
+    filter(!is.na(!!as.symbol(y))) %>%
+    left_join(pool_groups_env, by = c("Sam1" = "Rep_ID")) %>%
+    left_join(pool_groups_env, by = c("Sam2" = "Rep_ID")) %>%
+    rowwise() %>%
+    mutate(Comparison = paste(sort(
+      c(Comp_Group_Hier.x, Comp_Group_Hier.y)
+    ), collapse = ":\n")) %>%
+    ungroup() %>%
+    select(-Comp_Group_Hier.x, -Comp_Group_Hier.y)
+})
+
+single_df <- 
+  reduce(clean_dfs, left_join, by = c("Sam1", "Sam2","Comparison"))
+
+single_df %>%
+  select(where(is.numeric)) %>%
+  cor()
+```
+
+```
+##              bNRI_ses    bNRI_conf     bNTI_ses  bNTI_conf    rc_ses    rc_conf
+## bNRI_ses   1.00000000  0.830339428 -0.032051473 -0.1816686 0.1931284 0.18581247
+## bNRI_conf  0.83033943  1.000000000  0.001131055 -0.1264407 0.1120989 0.09942743
+## bNTI_ses  -0.03205147  0.001131055  1.000000000  0.7488793 0.2701077 0.26686592
+## bNTI_conf -0.18166856 -0.126440749  0.748879294  1.0000000 0.1243886 0.12055752
+## rc_ses     0.19312840  0.112098943  0.270107736  0.1243886 1.0000000 0.91855853
+## rc_conf    0.18581247  0.099427431  0.266865924  0.1205575 0.9185585 1.00000000
+```
+
+```r
+save(single_df, file = "data/12_ecological_drivers/single_df.RData")
+```
+
+It's really important to note there that bNRI and bNTI are NOT well correlated -> this is actually fairly consistent with already discussed issues with using bNRI across broad phylogenetic groups (see Stegen 2012, 2013, and Ning 2020). Since we're not binning, it's reasonable to only think about bNTI (even though we use bNRI within iCAMP itself).
+
+
+```r
+data.frame(x = c(0, 1, 2, 1, 1),
+           y = c(1, 1, 1, 0, 2),
+           Process = c("Homogenizing\nSelection",
+                       "Drift",
+                       "Heterogeneous\nSelection",
+                       "Homogenizing\nDispersal",
+                       "Dispersal\nLimitation")) %>%
+  ggplot(aes(x = x, y = y, label = Process)) + 
+  annotate(geom = "rect", 
+           xmin = -Inf, xmax = 0.5, ymin = -Inf, ymax = Inf,
+           fill = "chartreuse4", alpha = 0.8) + 
+  annotate(geom = "rect", 
+           xmin = Inf, xmax = 1.5, ymin = -Inf, ymax = Inf,
+           fill = "olivedrab", alpha = 0.6) + 
+  annotate(geom = "rect", 
+           xmin = 1.5, xmax = 0.5, ymin = 1.5, ymax = Inf,
+           fill = "dodgerblue3", alpha = 0.7) + 
+  annotate(geom = "rect", 
+           xmin = 1.5, xmax = 0.5, ymin = -Inf, ymax = 0.5,
+           fill = "dodgerblue4", alpha = 0.7) +
+  geom_text() + 
+  coord_fixed(xlim = c(-0.5, 2.5),
+                  ylim = c(-0.5, 2.5),
+              expand = FALSE) +
+  scale_y_continuous(breaks = c(0.5, 1.5),
+                     labels = c(-0.95, 0.95)) + 
+  scale_x_continuous(breaks = c(0.5, 1.5),
+                     labels = c(-2, 2)) + 
+  labs(x = expression(beta*NTI), y = expression(RC[bray])) + 
+  theme(axis.line = element_blank())
+```
+
+<img src="../figures/12_Ecological_Drivers/conceptual-figure-1.png" style="display: block; margin: auto;" />
+
+
+```r
+single_df %>%
+  mutate(Process = case_when(bNTI_ses < -2 ~ "Homogenizing Selection",
+                             bNTI_ses > 2 ~ "Heterogeneous Selection",
+                             rc_ses < -0.95 ~ "Homogenizing Dispersal",
+                             rc_ses > 0.95 ~ "Dispersal Limitation",
+                             TRUE ~ "Drift")) %>%
+  count(Comparison, Process)
+```
+
+```
+## # A tibble: 15 × 3
+##    Comparison                              Process                     n
+##    <chr>                                   <chr>                   <int>
+##  1 "Deep:\nDeep"                           Homogenizing Selection    190
+##  2 "Deep:\nShallow_May"                    Drift                      45
+##  3 "Deep:\nShallow_May"                    Heterogeneous Selection     6
+##  4 "Deep:\nShallow_May"                    Homogenizing Selection    469
+##  5 "Deep:\nShallow_September"              Drift                      64
+##  6 "Deep:\nShallow_September"              Heterogeneous Selection    20
+##  7 "Deep:\nShallow_September"              Homogenizing Selection    416
+##  8 "Shallow_May:\nShallow_May"             Drift                      17
+##  9 "Shallow_May:\nShallow_May"             Homogenizing Dispersal      1
+## 10 "Shallow_May:\nShallow_May"             Homogenizing Selection    307
+## 11 "Shallow_May:\nShallow_September"       Drift                      76
+## 12 "Shallow_May:\nShallow_September"       Heterogeneous Selection    34
+## 13 "Shallow_May:\nShallow_September"       Homogenizing Selection    540
+## 14 "Shallow_September:\nShallow_September" Homogenizing Dispersal      1
+## 15 "Shallow_September:\nShallow_September" Homogenizing Selection    299
+```
+
+```r
+single_df %>%
+  mutate(Process = case_when(bNTI_ses < -2 ~ "Homogenizing Selection",
+                             bNTI_ses > 2 ~ "Heterogeneous Selection",
+                             rc_ses < -0.95 ~ "Homogenizing Dispersal",
+                             rc_ses > 0.95 ~ "Dispersal Limitation",
+                             TRUE ~ "Drift")) %>%
+  count(Comparison, Process) %>%
+  ungroup() %>%
+  group_by(Comparison) %>%
+  mutate(perc = round(n / sum(n), 3)) %>%
+  mutate(x = case_when(Process == "Homogenizing Selection" ~ 0,
+                       Process == "Heterogeneous Selection" ~ 2,
+                       TRUE ~ 1),
+         y = case_when(Process == "Dispersal Limitation" ~ 2,
+                       Process == "Homogenizing Dispersal" ~ 0,
+                       TRUE ~ 1),
+         Comparison = factor(Comparison, 
+                             levels = c("Deep:\nDeep",
+                                        "Shallow_May:\nShallow_May",
+                                        "Shallow_September:\nShallow_September",
+                                        "Deep:\nShallow_May",
+                                        "Deep:\nShallow_September",
+                                        "Shallow_May:\nShallow_September"))) %>%
+  ggplot(aes(x = x, y = y, label = perc)) + 
+  annotate(geom = "rect", 
+           xmin = -Inf, xmax = 0.5, ymin = -Inf, ymax = Inf,
+           fill = "chartreuse4", alpha = 0.8) + 
+  annotate(geom = "rect", 
+           xmin = Inf, xmax = 1.5, ymin = -Inf, ymax = Inf,
+           fill = "olivedrab", alpha = 0.6) + 
+  annotate(geom = "rect", 
+           xmin = 1.5, xmax = 0.5, ymin = 1.5, ymax = Inf,
+           fill = "dodgerblue3", alpha = 0.7) + 
+  annotate(geom = "rect", 
+           xmin = 1.5, xmax = 0.5, ymin = -Inf, ymax = 0.5,
+           fill = "dodgerblue4", alpha = 0.7) +
+  geom_text() + 
+  facet_wrap(~Comparison) + 
+  coord_fixed(xlim = c(-0.5, 2.5),
+                  ylim = c(-0.5, 2.5)) +
+  labs(x = expression(beta*NTI), y = expression(RC[bray])) + 
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.line = element_blank())
+```
+
+<img src="../figures/12_Ecological_Drivers/plotting-results-ses-1.png" style="display: block; margin: auto;" />
+
+
+```r
+single_df %>%
+  mutate(Process = case_when(bNTI_conf < -0.95 ~ "Homogenizing Selection",
+                             bNTI_conf > 0.95 ~ "Heterogeneous Selection",
+                             rc_conf < -0.95 ~ "Homogenizing Dispersal",
+                             rc_conf > 0.95 ~ "Dispersal Limitation",
+                             TRUE ~ "Drift")) %>%
+  count(Comparison, Process)
+```
+
+```
+## # A tibble: 17 × 3
+##    Comparison                              Process                     n
+##    <chr>                                   <chr>                   <int>
+##  1 "Deep:\nDeep"                           Homogenizing Selection    190
+##  2 "Deep:\nShallow_May"                    Drift                      23
+##  3 "Deep:\nShallow_May"                    Heterogeneous Selection     7
+##  4 "Deep:\nShallow_May"                    Homogenizing Dispersal      2
+##  5 "Deep:\nShallow_May"                    Homogenizing Selection    488
+##  6 "Deep:\nShallow_September"              Drift                      38
+##  7 "Deep:\nShallow_September"              Heterogeneous Selection    26
+##  8 "Deep:\nShallow_September"              Homogenizing Dispersal      1
+##  9 "Deep:\nShallow_September"              Homogenizing Selection    435
+## 10 "Shallow_May:\nShallow_May"             Drift                       3
+## 11 "Shallow_May:\nShallow_May"             Homogenizing Dispersal      9
+## 12 "Shallow_May:\nShallow_May"             Homogenizing Selection    313
+## 13 "Shallow_May:\nShallow_September"       Drift                      53
+## 14 "Shallow_May:\nShallow_September"       Heterogeneous Selection    39
+## 15 "Shallow_May:\nShallow_September"       Homogenizing Dispersal      3
+## 16 "Shallow_May:\nShallow_September"       Homogenizing Selection    555
+## 17 "Shallow_September:\nShallow_September" Homogenizing Selection    300
+```
+
+```r
+single_df %>%
+  mutate(Process = case_when(bNTI_conf < -0.95 ~ "Homogenizing Selection",
+                             bNTI_conf > 0.95 ~ "Heterogeneous Selection",
+                             rc_conf < -0.95 ~ "Homogenizing Dispersal",
+                             rc_conf > 0.95 ~ "Dispersal Limitation",
+                             TRUE ~ "Drift")) %>%
+  count(Comparison, Process) %>%
+  ungroup() %>%
+  group_by(Comparison) %>%
+  mutate(perc = round(n / sum(n), 3)) %>%
+  mutate(x = case_when(Process == "Homogenizing Selection" ~ 0,
+                       Process == "Heterogeneous Selection" ~ 2,
+                       TRUE ~ 1),
+         y = case_when(Process == "Dispersal Limitation" ~ 2,
+                       Process == "Homogenizing Dispersal" ~ 0,
+                       TRUE ~ 1)) %>%
+  ggplot(aes(x = x, y = y, label = perc)) + 
+  annotate(geom = "rect", 
+           xmin = -Inf, xmax = 0.5, ymin = -Inf, ymax = Inf,
+           fill = "chartreuse4", alpha = 0.8) + 
+  annotate(geom = "rect", 
+           xmin = Inf, xmax = 1.5, ymin = -Inf, ymax = Inf,
+           fill = "olivedrab", alpha = 0.6) + 
+  annotate(geom = "rect", 
+           xmin = 1.5, xmax = 0.5, ymin = 1.5, ymax = Inf,
+           fill = "dodgerblue3", alpha = 0.7) + 
+  annotate(geom = "rect", 
+           xmin = 1.5, xmax = 0.5, ymin = -Inf, ymax = 0.5,
+           fill = "dodgerblue4", alpha = 0.7) +
+  geom_text() + 
+  facet_wrap(~Comparison) + 
+  coord_fixed(xlim = c(-0.5, 2.5),
+                  ylim = c(-0.5, 2.5)) +
+  labs(x = expression(beta*NTI), y = expression(RC[bray])) + 
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.line = element_blank())
+```
+
+<img src="../figures/12_Ecological_Drivers/plotting-results-conf-1.png" style="display: block; margin: auto;" />
