@@ -1,7 +1,7 @@
 ---
 title: "Ecological Drivers (iCAMP)" 
 author: "Augustus Pendleton"
-date: "08 October, 2025"
+date: "16 October, 2025"
 output:
   html_document:
     code_folding: show
@@ -103,6 +103,18 @@ pools_env <- pool_groups_env$Comp_Group_Hier[match(row.names(asv_mat_env), pool_
   dplyr::rename(Comp_Group_Hier = 1)
 
 row.names(pools_env) <- row.names(asv_mat_env)
+
+# One for four-group comparison
+pool_groups_env4 <- env_physeq %>%
+  sample_data() %>%
+  data.frame() %>%
+  dplyr::select(Rep_ID, Comp_Group_Hier_Colors)
+
+pools_env4 <- pool_groups_env4$Comp_Group_Hier_Colors[match(row.names(asv_mat_env), pool_groups_env4$Rep_ID)] %>%
+  data.frame() %>%
+  dplyr::rename(Comp_Group_Hier_Colors = 1)
+
+row.names(pools_env4) <- row.names(asv_mat_env)
 ```
 
 
@@ -238,18 +250,64 @@ final_results %>%
 
 # Run iCAMP
 
+Okay, the reviewers brought up a good point in that we should test how much the choice of these parameters may affect our findings. I would like to do a shorter sensitivity analyses to confirm this is possible. However, we simply cannot do 1000 iterations for each of them (it would take over a week). As such, we're doing a "quick pass", after which we'll do a "final" analysis with suffificient randomization.
+
 
 ```r
+icamp_results_ds1_bsl24 <- icamp.big(comm = asv_mat_env,
+                           tree = tree_env,
+                           pd.desc = pd.big$pd.file, 
+                           pd.spname=pd.big$tip.label,
+                           pd.wd = pd.big$pd.wd,
+                           rand = 100,
+                           prefix = "icamp_ds1_bsl24_",
+                           ds = .1,
+                           bin.size.limit = 24,
+                           nworker = 20,
+                           detail.save = TRUE,
+                           qp.save = TRUE,
+                           detail.null = TRUE,
+                           output.wd = "data/12_ecological_drivers/output_ds1_bsl24",
+                           omit.option = "no",
+                           taxo.metric = "bray",
+                           sig.index = "Confidence",
+                           conf.cut=0.975,
+                           transform.method = NULL)
+
+save(icamp_results_ds1_bsl24, file = "data/12_ecological_drivers/output_ds1_bsl24.RData")
+
+icamp_results_ds3_bsl24 <- icamp.big(comm = asv_mat_env,
+                           tree = tree_env,
+                           pd.desc = pd.big$pd.file, 
+                           pd.spname=pd.big$tip.label,
+                           pd.wd = pd.big$pd.wd,
+                           rand = 100,
+                           prefix = "icamp_ds3_bsl24_",
+                           ds = .3,
+                           bin.size.limit = 24,
+                           nworker = 20,
+                           detail.save = TRUE,
+                           qp.save = TRUE,
+                           detail.null = TRUE,
+                           output.wd = "data/12_ecological_drivers/output_ds3_bsl24",
+                           omit.option = "no",
+                           taxo.metric = "bray",
+                           sig.index = "Confidence",
+                           conf.cut=0.975,
+                           transform.method = NULL)
+
+save(icamp_results_ds3_bsl24, file = "data/12_ecological_drivers/output_ds3_bsl24.RData")
+
 icamp_results_ds5_bsl24 <- icamp.big(comm = asv_mat_env,
                            tree = tree_env,
-                           pd.desc = pd.big2$pd.file, 
-                           pd.spname=pd.big2$tip.label,
-                           pd.wd = pd.big2$pd.wd,
-                           rand = 1000,
+                           pd.desc = pd.big$pd.file, 
+                           pd.spname=pd.big$tip.label,
+                           pd.wd = pd.big$pd.wd,
+                           rand = 100,
                            prefix = "icamp_ds5_bsl24_",
                            ds = .5,
                            bin.size.limit = 24,
-                           nworker = 60,
+                           nworker = 20,
                            detail.save = TRUE,
                            qp.save = TRUE,
                            detail.null = TRUE,
@@ -257,13 +315,156 @@ icamp_results_ds5_bsl24 <- icamp.big(comm = asv_mat_env,
                            omit.option = "no",
                            taxo.metric = "bray",
                            sig.index = "Confidence",
-                           ses.cut = 1.96, 
-                           rc.cut = 0.95, 
                            conf.cut=0.975,
                            transform.method = NULL)
 
-save(icamp_results_ds5_bsl24, file = "data/12_ecological_drivers/icamp_results_ds5_bsl24.RData")
+save(icamp_results_ds5_bsl24, file = "data/12_ecological_drivers/output_ds5_bsl24.RData")
+
+icamp_results_ds1_bsl48 <- icamp.big(comm = asv_mat_env,
+                           tree = tree_env,
+                           pd.desc = pd.big$pd.file, 
+                           pd.spname=pd.big$tip.label,
+                           pd.wd = pd.big$pd.wd,
+                           rand = 100,
+                           prefix = "icamp_ds1_bsl48_",
+                           ds = .1,
+                           bin.size.limit = 48,
+                           nworker = 20,
+                           detail.save = TRUE,
+                           qp.save = TRUE,
+                           detail.null = TRUE,
+                           output.wd = "data/12_ecological_drivers/output_ds1_bsl48",
+                           omit.option = "no",
+                           taxo.metric = "bray",
+                           sig.index = "Confidence",
+                           conf.cut=0.975,
+                           transform.method = NULL)
+
+save(icamp_results_ds1_bsl48, file = "data/12_ecological_drivers/output_ds1_bsl48.RData")
+
+icamp_results_ds3_bsl48 <- icamp.big(comm = asv_mat_env,
+                           tree = tree_env,
+                           pd.desc = pd.big$pd.file, 
+                           pd.spname=pd.big$tip.label,
+                           pd.wd = pd.big$pd.wd,
+                           rand = 100,
+                           prefix = "icamp_ds3_bsl48_",
+                           ds = .3,
+                           bin.size.limit = 48,
+                           nworker = 20,
+                           detail.save = TRUE,
+                           qp.save = TRUE,
+                           detail.null = TRUE,
+                           output.wd = "data/12_ecological_drivers/output_ds3_bsl48",
+                           omit.option = "no",
+                           taxo.metric = "bray",
+                           sig.index = "Confidence",
+                           conf.cut=0.975,
+                           transform.method = NULL)
+
+save(icamp_results_ds3_bsl48, file = "data/12_ecological_drivers/output_ds3_bsl48.RData")
+
+icamp_results_ds5_bsl48 <- icamp.big(comm = asv_mat_env,
+                           tree = tree_env,
+                           pd.desc = pd.big$pd.file, 
+                           pd.spname=pd.big$tip.label,
+                           pd.wd = pd.big$pd.wd,
+                           rand = 100,
+                           prefix = "icamp_ds5_bsl48_",
+                           ds = .5,
+                           bin.size.limit = 48,
+                           nworker = 20,
+                           detail.save = TRUE,
+                           qp.save = TRUE,
+                           detail.null = TRUE,
+                           output.wd = "data/12_ecological_drivers/output_ds5_bsl48",
+                           omit.option = "no",
+                           taxo.metric = "bray",
+                           sig.index = "Confidence",
+                           conf.cut=0.975,
+                           transform.method = NULL)
+
+save(icamp_results_ds5_bsl48, file = "data/12_ecological_drivers/output_ds5_bsl48.RData")
 ```
+
+# Examining over-all differences
+
+
+```r
+load("data/12_ecological_drivers/output_ds1_bsl24.RData")
+load("data/12_ecological_drivers/output_ds3_bsl24.RData")
+load("data/12_ecological_drivers/output_ds5_bsl24.RData")
+load("data/12_ecological_drivers/output_ds1_bsl48.RData")
+load("data/12_ecological_drivers/output_ds3_bsl48.RData")
+load("data/12_ecological_drivers/output_ds5_bsl48.RData")
+
+results_list <- 
+  list(icamp_results_ds1_bsl24,
+     icamp_results_ds1_bsl48,
+     icamp_results_ds3_bsl24,
+     icamp_results_ds3_bsl48,
+     icamp_results_ds5_bsl24,
+     icamp_results_ds5_bsl48)
+
+bin_results <- map(results_list, \(x){
+  icamp.bins(icamp.detail = x$detail,
+                        treat = pools_env,
+                        clas=tax_for_icamp,
+                        silent=FALSE, 
+                        boot = FALSE,
+                        rand.time = 100,
+                        between.group = TRUE)
+})
+
+names(bin_results) <- c("1_24",
+                       "1_48",
+                       "3_24",
+                       "3_48",
+                       "5_24",
+                       "5_48")
+
+map(bin_results, \(x)x$Pt) %>%
+  bind_rows(.id = "Settings") %>%
+  separate_wider_delim(Settings, delim = "_", names = c("ds", "bsl")) %>%
+  pivot_longer(HeS:DR, names_to = "Process",
+               values_to = "Importance") %>%
+  ggplot(aes(x = ds, y = as.numeric(Importance), color = bsl)) + 
+  facet_grid(Group ~ Process) + 
+  geom_point() + 
+  coord_cartesian(ylim = c(0,1))
+```
+
+<img src="../figures/12_Ecological_Drivers/unnamed-chunk-1-1.png" style="display: block; margin: auto;" />
+
+# Full-official one
+
+
+```r
+icamp_results_official <- icamp.big(comm = asv_mat_env,
+                           tree = tree_env,
+                           pd.desc = pd.big$pd.file, 
+                           pd.spname=pd.big$tip.label,
+                           pd.wd = pd.big$pd.wd,
+                           rand = 1000,
+                           prefix = "icamp_ds5_bsl48_",
+                           ds = .5,
+                           bin.size.limit = 24,
+                           nworker = 20,
+                           detail.save = TRUE,
+                           qp.save = TRUE,
+                           detail.null = TRUE,
+                           output.wd = "data/12_ecological_drivers/official_output",
+                           omit.option = "no",
+                           taxo.metric = "bray",
+                           sig.index = "Confidence",
+                           conf.cut=0.975,
+                           transform.method = NULL)
+
+save(icamp_results_official, file = "data/12_ecological_drivers/official_output.RData")
+```
+
+
+
 
 # Calculating bin-level statistics
 
@@ -277,7 +478,7 @@ Now, we feed our icamp results into a function that will do several things at on
 
 
 ```r
-icamp_bin_ds5_bsl24 <- icamp.bins(icamp.detail = icamp_results_ds5_bsl24$detail,
+icamp_bin_ds5_bsl24 <- icamp.bins(icamp.detail = icamp_results_official$detail,
                         treat = pools_env,
                         clas=tax_for_icamp,
                         silent=FALSE, 
@@ -285,6 +486,17 @@ icamp_bin_ds5_bsl24 <- icamp.bins(icamp.detail = icamp_results_ds5_bsl24$detail,
                         rand.time = 1000,
                         between.group = TRUE)
 
+icamp_bin_four_groups <- 
+  icamp.bins(icamp.detail = icamp_results_official$detail,
+                        treat = pools_env4,
+                        clas=tax_for_icamp,
+                        silent=FALSE, 
+                        boot = TRUE,
+                        rand.time = 1000,
+                        between.group = TRUE)
+
+save(icamp_bin_four_groups,
+     file = "data/12_ecological_drivers/icamp_bin_four_groups.rda")
 
 save(icamp_bin_ds5_bsl24,
      file = "data/12_ecological_drivers/icamp_bin_ds5_bsl24.rda")
@@ -297,7 +509,40 @@ Now let's analyze some of these results
 
 ```r
 load("data/12_ecological_drivers/icamp_bin_ds5_bsl24.rda")
+load("data/12_ecological_drivers/icamp_bin_four_groups.rda")
 ```
+
+## Compare 3 vs. 4 Groups
+
+
+```r
+list(three_groups = icamp_bin_ds5_bsl24$Pt,
+     four_groups = icamp_bin_four_groups$Pt) %>%
+  bind_rows(.id = "groups") %>%
+  filter(Group %in% c("Deep", "Deep (May)", "Deep (September)")) %>%
+  pivot_longer(HeS:DR) %>%
+  ggplot(aes(x = Group, y = as.numeric(value))) + 
+  geom_col() + 
+  facet_wrap(~name)
+```
+
+<img src="../figures/12_Ecological_Drivers/unnamed-chunk-2-1.png" style="display: block; margin: auto;" />
+
+```r
+list(three_groups = icamp_bin_ds5_bsl24$Pt,
+     four_groups = icamp_bin_four_groups$Pt) %>%
+  bind_rows(.id = "groups") %>%
+  filter(Group %in% c("Deep_vs_Shallow_May", "Deep (May)_vs_Shallow_May", "Deep (September)_vs_Shallow_September", "Deep_vs_Shallow_September")) %>%
+  pivot_longer(HeS:DR) %>%
+  ggplot(aes(y = Group, x = as.numeric(value))) + 
+  geom_col() + 
+  facet_grid(~name) + 
+  coord_cartesian(xlim = c(0,1))
+```
+
+<img src="../figures/12_Ecological_Drivers/unnamed-chunk-2-2.png" style="display: block; margin: auto;" />
+
+Okay, these results have convinced me. There is enough difference between the Deep (May) results and the Deep (September) results for me to want to show them separately. It doesn't really change the comparisons between the Deep and Shallow, but I understand the reviewer's comments. I'm going to remake the tree diagram to have one more major row (bummer, but I think it's good work to do!). Homogenizing dispersal and HeS are still not relevant so I won't worry about them.
 
 ## Figure 3A/B
 
@@ -305,7 +550,7 @@ In this figure, we make treemap plots for the relative contribution of each clas
 
 
 ```r
-icamp_bin <- icamp_bin_ds5_bsl24
+icamp_bin <- icamp_bin_four_groups
 
 bptk <- icamp_bin$BPtk
 
@@ -332,7 +577,7 @@ Here, we export panels for across-group comparisons, which together create Figur
 ```r
 tree_plots <- labeled_bptk %>%
   mutate(Class = ifelse(Class %in% important_class, Class, "Rare")) %>%
-  filter(!(Group %in% c("Deep","Shallow_September","Shallow_May")),
+  filter((Group %in% c("Deep (May)_vs_Shallow_May", "Deep (September)_vs_Shallow_September", "Shallow_May_vs_Shallow_September", "Deep (May)_vs_Deep (September)")),
          Process %in% c("HoS","DR","DL")) %>%
   group_by(Group, Process, Class) %>%
   summarize(Contribution = sum(Contribution)) %>%
@@ -350,7 +595,7 @@ tree_plots <- labeled_bptk %>%
            )
   )
 
-# These are the panels which go into Figure 3A
+# These are the panels which go into Figure 3B
 for(i in 1:nrow(tree_plots)){
   ggsave(tree_plots$plots[[i]], 
          filename = paste("figures/12_Ecological_Drivers/tree_panels/",
@@ -361,9 +606,9 @@ for(i in 1:nrow(tree_plots)){
 
 # Finding average heights
 
- labeled_bptk %>%
+labeled_bptk %>%
   mutate(Class = ifelse(Class %in% important_class, Class, "Rare")) %>%
-  filter(!(Group %in% c("Deep","Shallow_September","Shallow_May")),
+  filter((Group %in% c("Deep (May)_vs_Shallow_May", "Deep (September)_vs_Shallow_September", "Shallow_May_vs_Shallow_September", "Deep (May)_vs_Deep (September)")),
          Process %in% c("HoS","DR","DL")) %>%
   group_by(Group, Process) %>%
   summarize(Contribution = sum(Contribution)) %>%
@@ -377,18 +622,21 @@ for(i in 1:nrow(tree_plots)){
 ```
 
 ```
-## # A tibble: 9 × 5
-##   Group                            Process                Contribution Ratio Side_Adjustment
-##   <chr>                            <chr>                         <dbl> <dbl>           <dbl>
-## 1 Deep_vs_Shallow_May              Dispersal Limitation         0.122  0.221           0.470
-## 2 Deep_vs_Shallow_May              Drift                        0.482  0.872           0.934
-## 3 Deep_vs_Shallow_May              Homogenizing Selection       0.357  0.646           0.804
-## 4 Deep_vs_Shallow_September        Dispersal Limitation         0.232  0.419           0.647
-## 5 Deep_vs_Shallow_September        Drift                        0.317  0.574           0.758
-## 6 Deep_vs_Shallow_September        Homogenizing Selection       0.442  0.800           0.895
-## 7 Shallow_May_vs_Shallow_September Dispersal Limitation         0.0973 0.176           0.420
-## 8 Shallow_May_vs_Shallow_September Drift                        0.346  0.626           0.791
-## 9 Shallow_May_vs_Shallow_September Homogenizing Selection       0.552  1               1
+## # A tibble: 12 × 5
+##    Group                                 Process                Contribution  Ratio Side_Adjustment
+##    <chr>                                 <chr>                         <dbl>  <dbl>           <dbl>
+##  1 Deep (May)_vs_Deep (September)        Dispersal Limitation         0.121  0.188            0.434
+##  2 Deep (May)_vs_Deep (September)        Drift                        0.492  0.767            0.876
+##  3 Deep (May)_vs_Deep (September)        Homogenizing Selection       0.369  0.576            0.759
+##  4 Deep (May)_vs_Shallow_May             Dispersal Limitation         0.0458 0.0714           0.267
+##  5 Deep (May)_vs_Shallow_May             Drift                        0.468  0.731            0.855
+##  6 Deep (May)_vs_Shallow_May             Homogenizing Selection       0.481  0.751            0.866
+##  7 Deep (September)_vs_Shallow_September Dispersal Limitation         0.291  0.454            0.674
+##  8 Deep (September)_vs_Shallow_September Drift                        0.157  0.245            0.495
+##  9 Deep (September)_vs_Shallow_September Homogenizing Selection       0.548  0.855            0.925
+## 10 Shallow_May_vs_Shallow_September      Dispersal Limitation         0.115  0.179            0.423
+## 11 Shallow_May_vs_Shallow_September      Drift                        0.240  0.375            0.612
+## 12 Shallow_May_vs_Shallow_September      Homogenizing Selection       0.641  1                1
 ```
 
 Here, we export panels for within-group turnovers, which together create Figure 3A
@@ -397,7 +645,7 @@ Here, we export panels for within-group turnovers, which together create Figure 
 ```r
 tree_plots <- labeled_bptk %>%
   mutate(Class = ifelse(Class %in% important_class, Class, "Rare")) %>%
-  filter((Group %in% c("Deep","Shallow_September","Shallow_May")),
+  filter((Group %in% c("Deep (May)", "Deep (September)", "Shallow_September","Shallow_May")),
          Process %in% c("HoS","DR","DL")) %>%
   group_by(Group, Process, Class) %>%
   summarize(Contribution = sum(Contribution)) %>%
@@ -425,9 +673,9 @@ for(i in 1:nrow(tree_plots)){
 
 # Finding average heights
 
- labeled_bptk %>%
+labeled_bptk %>%
   mutate(Class = ifelse(Class %in% important_class, Class, "Rare")) %>%
-  filter(
+  filter((Group %in% c("Deep (May)", "Deep (September)", "Shallow_September","Shallow_May")),
          Process %in% c("HoS","DR","DL")) %>%
   group_by(Group, Process) %>%
   summarize(Contribution = sum(Contribution)) %>%
@@ -441,27 +689,21 @@ for(i in 1:nrow(tree_plots)){
 ```
 
 ```
-## # A tibble: 18 × 5
-##    Group                            Process                Contribution  Ratio Side_Adjustment
-##    <chr>                            <chr>                         <dbl>  <dbl>           <dbl>
-##  1 Deep                             Dispersal Limitation         0.128  0.191            0.437
-##  2 Deep                             Drift                        0.524  0.780            0.883
-##  3 Deep                             Homogenizing Selection       0.327  0.487            0.698
-##  4 Deep_vs_Shallow_May              Dispersal Limitation         0.122  0.181            0.426
-##  5 Deep_vs_Shallow_May              Drift                        0.482  0.717            0.847
-##  6 Deep_vs_Shallow_May              Homogenizing Selection       0.357  0.531            0.729
-##  7 Deep_vs_Shallow_September        Dispersal Limitation         0.232  0.345            0.587
-##  8 Deep_vs_Shallow_September        Drift                        0.317  0.472            0.687
-##  9 Deep_vs_Shallow_September        Homogenizing Selection       0.442  0.658            0.811
-## 10 Shallow_May                      Dispersal Limitation         0.0591 0.0879           0.297
-## 11 Shallow_May                      Drift                        0.522  0.777            0.881
-## 12 Shallow_May                      Homogenizing Selection       0.400  0.595            0.772
-## 13 Shallow_May_vs_Shallow_September Dispersal Limitation         0.0973 0.145            0.381
-## 14 Shallow_May_vs_Shallow_September Drift                        0.346  0.515            0.717
-## 15 Shallow_May_vs_Shallow_September Homogenizing Selection       0.552  0.823            0.907
-## 16 Shallow_September                Dispersal Limitation         0.0588 0.0875           0.296
-## 17 Shallow_September                Drift                        0.242  0.360            0.600
-## 18 Shallow_September                Homogenizing Selection       0.672  1                1
+## # A tibble: 12 × 5
+##    Group             Process                Contribution  Ratio Side_Adjustment
+##    <chr>             <chr>                         <dbl>  <dbl>           <dbl>
+##  1 Deep (May)        Dispersal Limitation         0.0264 0.0384           0.196
+##  2 Deep (May)        Drift                        0.576  0.840            0.917
+##  3 Deep (May)        Homogenizing Selection       0.377  0.550            0.741
+##  4 Deep (September)  Dispersal Limitation         0.191  0.279            0.528
+##  5 Deep (September)  Drift                        0.438  0.639            0.799
+##  6 Deep (September)  Homogenizing Selection       0.342  0.498            0.706
+##  7 Shallow_May       Dispersal Limitation         0.0328 0.0478           0.219
+##  8 Shallow_May       Drift                        0.367  0.534            0.731
+##  9 Shallow_May       Homogenizing Selection       0.592  0.864            0.929
+## 10 Shallow_September Dispersal Limitation         0.0641 0.0934           0.306
+## 11 Shallow_September Drift                        0.223  0.326            0.571
+## 12 Shallow_September Homogenizing Selection       0.686  1                1
 ```
 
 ## Figure 3B: Relating bin abundance/variation to assembly process
@@ -493,7 +735,7 @@ bins_w_one_dom <- bin_dom_procsses %>%
 all_bin_process <- bin_dom_procsses %>%
   filter(Vals != 1) %>% 
   pivot_wider(names_from = DominantProcess, values_from = DominantProcess) %>%
-  unite(DL:HeS, col = "DominantProcess", sep = "/", na.rm = TRUE) %>%
+  unite(DR:DL, col = "DominantProcess", sep = "/", na.rm = TRUE) %>%
   select(Bin, DominantProcess) %>%
   rbind(bins_w_one_dom)
 ```
@@ -531,7 +773,7 @@ bin_summarized_abunds <- bin_sample_abunds %>%
 ```r
 bin_summarized_abunds %>%
   left_join(all_bin_process) %>%
-  filter(DominantProcess %in% c("DL", "DL/DR","DR","HoS")) %>%
+  filter(DominantProcess %in% c("DL", "DR/DL","DR","HoS")) %>%
   ggplot(aes(x = variance, y = max_abund, color = DominantProcess, fill = DominantProcess)) + 
   geom_point(size = 1.5, alpha = 0.7) + 
   geom_ysidedensity(alpha = 0.2, show.legend = FALSE) + 
@@ -539,13 +781,13 @@ bin_summarized_abunds %>%
   scale_y_continuous(transform = "log10", labels = scales::label_comma()) +
   guides(x = guide_axis(check.overlap = TRUE)) + 
   scale_color_manual(values = process_colors,
-                     breaks = c("HoS","DR","DL/DR","DL"),
+                     breaks = c("HoS","DR","DR/DL","DL"),
                      labels = c("Homogenizing\nSelection",
                                 "Drift",
                                 "Dispersal Limitation/\nDrift",
                                 "Dispersal Limitation")) + 
   scale_fill_manual(values = process_colors,
-                    breaks = c("HoS","DR","DL/DR","DL"),
+                    breaks = c("HoS","DR","DR/DL","DL"),
                      labels = c("Homogenizing\nSelection",
                                 "Drift",
                                 "Dispersal Limitation/\nDrift",
@@ -573,7 +815,7 @@ bin_summarized_abunds %>%
 ```r
 filt_bin <- bin_summarized_abunds %>%
   left_join(all_bin_process) %>%
-  filter(DominantProcess %in% c("DL", "DL/DR","DR","HoS"))
+  filter(DominantProcess %in% c("DL", "DR/DL","DR","HoS"))
 
 cor.test(filt_bin$max_abund,
        filt_bin$variance,
@@ -585,13 +827,76 @@ cor.test(filt_bin$max_abund,
 ## 	Spearman's rank correlation rho
 ## 
 ## data:  filt_bin$max_abund and filt_bin$variance
-## S = 549732, p-value = 2.58e-14
+## S = 572792, p-value < 2.2e-16
 ## alternative hypothesis: true rho is not equal to 0
 ## sample estimates:
 ##        rho 
-## -0.6103426
+## -0.5643857
 ```
 
+## Looking at upwelling turnovers specifically
+
+
+```r
+icamp_bin$Ptuv %>%
+  left_join(pool_groups_env, by = c("samp1" = "Rep_ID")) %>%
+    left_join(pool_groups_env, by = c("samp2" = "Rep_ID")) %>%
+    rowwise() %>%
+    ungroup() %>%
+  filter(samp1 == "September_38_E"|samp2=="September_38_E",
+         Comp_Group_Hier.x %in% c("Deep","Shallow_September")) %>%
+  select(HeS:DR, Comp_Group_Hier.x) %>%
+  pivot_longer(HeS:DR, names_to = "Process", values_to = "Percent") %>%
+  ggplot(aes(x = Process, y = Percent)) + 
+  geom_boxplot() + 
+  geom_jitter() + 
+  facet_wrap(~Comp_Group_Hier.x)
+```
+
+<img src="../figures/12_Ecological_Drivers/upwelling-turnovers-1.png" style="display: block; margin: auto;" />
+
+```r
+icamp_bin$Ptuv %>%
+  left_join(pool_groups_env, by = c("samp1" = "Rep_ID")) %>%
+    left_join(pool_groups_env, by = c("samp2" = "Rep_ID")) %>%
+    rowwise() %>%
+    ungroup() %>%
+  filter(samp1 == "September_38_E"|samp2=="September_38_E",
+         Comp_Group_Hier.x %in% c("Deep","Shallow_September")) %>%
+  arrange(desc(HD))
+```
+
+```
+## # A tibble: 44 × 10
+##    Method       samp1          samp2                HeS   HoS    DL     HD    DR Comp_Group_Hier.x Comp_Group_Hier.y
+##    <chr>        <chr>          <chr>              <dbl> <dbl> <dbl>  <dbl> <dbl> <chr>             <chr>            
+##  1 CbMPDiCbraya May_55_B       September_38_E  0.00314  0.318 0.406 0.141  0.132 Deep              Deep             
+##  2 CbMPDiCbraya September_38_E September_717_B 0.00405  0.335 0.402 0.132  0.127 Deep              Deep             
+##  3 CbMPDiCbraya September_12_M September_38_E  0.00889  0.413 0.198 0.128  0.252 Deep              Deep             
+##  4 CbMPDiCbraya September_38_E September_64_M  0.00854  0.349 0.392 0.125  0.126 Deep              Deep             
+##  5 CbMPDiCbraya September_38_E September_55_M  0.00878  0.343 0.411 0.114  0.123 Deep              Deep             
+##  6 CbMPDiCbraya September_38_E September_717_M 0.00406  0.367 0.253 0.113  0.264 Deep              Deep             
+##  7 CbMPDiCbraya May_41_B       September_38_E  0.00293  0.333 0.123 0.0599 0.481 Deep              Deep             
+##  8 CbMPDiCbraya September_12_E September_38_E  0.000912 0.345 0.475 0.0258 0.153 Shallow_September Deep             
+##  9 CbMPDiCbraya September_38_E September_66_E  0.00368  0.422 0.144 0.0236 0.407 Deep              Shallow_September
+## 10 CbMPDiCbraya September_33_B September_38_E  0.00701  0.326 0.354 0.0225 0.290 Deep              Deep             
+## # ℹ 34 more rows
+```
+
+# Looking at four-group comparisons
+
+
+
+```r
+icamp_bin_four_groups$Pt %>%
+  filter(Group == "Deep (May)_vs_Shallow_May"|Group == "Deep (September)_vs_Shallow_September") %>%
+  pivot_longer(HeS:DR) %>%
+  ggplot(aes(y=Group, x = as.numeric(value))) + 
+  geom_col() + 
+  facet_wrap(~name)
+```
+
+<img src="../figures/12_Ecological_Drivers/four-group-1.png" style="display: block; margin: auto;" />
 # Calculating Base Metrics
 
 iCAMP relies on measures of phylogenetic relatedness (here, bMPD) and taxonomic similarity (here, Raup-Crick based on Bray-Curtis). These metrics, and their interpretation, are well established in the literature. iCAMP's addition is the phylogenetic binning and subsequent averaging. But it seems useful to also test these metrics more simply, without the added steps of phylogenetic binning. 

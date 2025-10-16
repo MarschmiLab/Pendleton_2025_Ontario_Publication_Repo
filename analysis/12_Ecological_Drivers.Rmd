@@ -265,6 +265,7 @@ final_results %>%
              scales = "free_y") +
   labs(color = "bin.size.limit", x ="ds") + 
   theme_classic(base_size = 16)
+
 ```
 
 # Run iCAMP
@@ -412,6 +413,13 @@ save(icamp_results_ds5_bsl48, file = "data/12_ecological_drivers/output_ds5_bsl4
 
 ```{r}
 
+load("data/12_ecological_drivers/output_ds1_bsl24.RData")
+load("data/12_ecological_drivers/output_ds3_bsl24.RData")
+load("data/12_ecological_drivers/output_ds5_bsl24.RData")
+load("data/12_ecological_drivers/output_ds1_bsl48.RData")
+load("data/12_ecological_drivers/output_ds3_bsl48.RData")
+load("data/12_ecological_drivers/output_ds5_bsl48.RData")
+
 results_list <- 
   list(icamp_results_ds1_bsl24,
      icamp_results_ds1_bsl48,
@@ -452,7 +460,7 @@ map(bin_results, \(x)x$Pt) %>%
 
 # Full-official one
 
-```{r icamp-official}
+```{r icamp-official, eval = FALSE}
 
 icamp_results_official <- icamp.big(comm = asv_mat_env,
                            tree = tree_env,
