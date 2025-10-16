@@ -289,5 +289,5 @@ process_colors <-
     "DL/HeS" = "#F0AC7D",
     "DR" = "#832B0F",
     "HoS" = "#426737",
-    "DL/DR" = "#864F8F"
+    "DR/DL" = "#864F8F"
   )
