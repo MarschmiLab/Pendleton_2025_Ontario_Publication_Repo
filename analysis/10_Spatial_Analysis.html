@@ -1586,7 +1586,7 @@ font-size: 0.95em;
 
 <h1 class="title toc-ignore">Spatial Analysis</h1>
 <h4 class="author">Augustus Pendleton</h4>
-<h4 class="date">01 July, 2025</h4>
+<h4 class="date">17 October, 2025</h4>
 
 </div>
 
@@ -2487,7 +2487,62 @@ depth_decay &lt;- tidy_dist_decay %&gt;%
            color = triglav[c(1,5)],
            hjust = 0,
            label = labs,
-           parse = TRUE)</code></pre>
+           parse = TRUE)
+
+tidy_dist_decay %&gt;%
+  filter(month.x == month.y) %&gt;%
+  nest_by(month.x) %&gt;%
+  mutate(cors = list(cor.test(1 - data$dist, data$depth_dist, method = &quot;spearman&quot;))) %&gt;%
+  pull(cors)</code></pre>
+<pre><code>## [[1]]
+## 
+##  Spearman&#39;s rank correlation rho
+## 
+## data:  1 - data$dist and data$depth_dist
+## S = 36749713, p-value &lt; 2.2e-16
+## alternative hypothesis: true rho is not equal to 0
+## sample estimates:
+##        rho 
+## -0.4979765 
+## 
+## 
+## [[2]]
+## 
+##  Spearman&#39;s rank correlation rho
+## 
+## data:  1 - data$dist and data$depth_dist
+## S = 111784492, p-value &lt; 2.2e-16
+## alternative hypothesis: true rho is not equal to 0
+## sample estimates:
+##        rho 
+## -0.6484621</code></pre>
+<pre class="r"><code>tidy_dist_decay %&gt;%
+  filter(month.x == month.y) %&gt;%
+  nest_by(month.x) %&gt;%
+  mutate(cors = list(cor.test(1 - data$dist, data$geo_dist, method = &quot;spearman&quot;))) %&gt;%
+  pull(cors)</code></pre>
+<pre><code>## [[1]]
+## 
+##  Spearman&#39;s rank correlation rho
+## 
+## data:  1 - data$dist and data$geo_dist
+## S = 25354521, p-value = 0.4425
+## alternative hypothesis: true rho is not equal to 0
+## sample estimates:
+##         rho 
+## -0.03349039 
+## 
+## 
+## [[2]]
+## 
+##  Spearman&#39;s rank correlation rho
+## 
+## data:  1 - data$dist and data$geo_dist
+## S = 71049412, p-value = 0.1942
+## alternative hypothesis: true rho is not equal to 0
+## sample estimates:
+##         rho 
+## -0.04775057</code></pre>
 <pre class="r"><code>combined &lt;- ggpubr::ggarrange(dist_decay, depth_decay, 
                               nrow = 2,
                   common.legend = TRUE,
@@ -2582,7 +2637,7 @@ map(formulas, \(form){
 ## [1] 0.001
 ## 
 ## $Geo
-## [1] 0.075</code></pre>
+## [1] 0.069</code></pre>
 <p>Then, we remake this figure, to be simpler and clearer:</p>
 <pre class="r"><code>vars &lt;- c(&quot;Env.&quot;, 
           &quot;Env. + Depth&quot;, 
@@ -2726,7 +2781,7 @@ wun_and_euc %&gt;%
 ##  collate  en_US.UTF-8
 ##  ctype    en_US.UTF-8
 ##  tz       America/New_York
-##  date     2025-07-01
+##  date     2025-10-17
 ##  pandoc   3.1.1 @ /usr/lib/rstudio-server/bin/quarto/bin/tools/ (via rmarkdown)
 ## 
 ## ─ Packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

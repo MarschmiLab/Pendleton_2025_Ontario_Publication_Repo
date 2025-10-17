@@ -1269,6 +1269,15 @@ full_abs_physeq %>%
   labs(x = "", y = "Measure (units in header)") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 
+full_abs_physeq %>%
+  sample_data %>%
+  data.frame() %>% 
+  filter(!(month=="September"&Upwelling=="Upwelling")) %>%
+  group_by(Comp_Group_Hier_Colors) %>%
+  summarize(median_hill0 = median(Richness),
+            sd_hill0 = sd(Richness),
+            median_hill2 = median(Simpson),
+            sd_hill2 = sd(Simpson))
 
 
 ```

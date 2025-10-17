@@ -108,12 +108,12 @@ write_tsv(input_table, file = "data/11_functional_exports/faprotax/input_table.t
 
 mkdir -p faprotax_outputs
 
-conda create -n "python_for_faprotax" python=3.7.6 ipython
+# conda create -n "python_for_faprotax" python=3.7.6 ipython
 
 conda activate python_for_faprotax
 conda install numpy
 
-FAPROTAX_1.2.10/collapse_table.py -i input_table.tsv -g FAPROTAX_1.2.10/FAPROTAX.txt -d taxonomy --omit_columns 0 -f -o faprotax_outputs/func_table.tsv -r faprotax_outputs/fapro_report.txt
+FAPROTAX_1.2.10/collapse_table.py -i input_table.tsv -g FAPROTAX_1.2.10/FAPROTAX.txt -d taxonomy --out_groups2records_table faprotax_outputs/asv_funs.tsv --omit_columns 0 -f -o faprotax_outputs/func_table.tsv -r faprotax_outputs/fapro_report.txt
 
 cd ../../../
 
@@ -186,6 +186,26 @@ semi_clean_fapro %>%
                append = FALSE)
 
 ```
+
+# Seeing which taxa are assigned to specific functions
+
+```{r}
+
+asv_funs <- read_tsv("data/11_functional_exports/faprotax/faprotax_outputs/asv_funs.tsv", comment = "#") %>%
+  select(where(~ any(. != 0)))
+
+asv_funs %>%
+  filter(sulfur_respiration == 1) %>%
+  pull(record)
+
+
+asv_funs %>%
+  filter(methanotrophy == 1) %>%
+  pull(record)
+
+```
+
+
 
 # Session Info
 

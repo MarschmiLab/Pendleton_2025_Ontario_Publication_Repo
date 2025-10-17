@@ -1374,3 +1374,25 @@ full_abs_physeq %>%
 ```
 
 <img src="../figures/12_Ecological_Drivers/upwelling-environment-1.png" style="display: block; margin: auto;" />
+
+```r
+full_abs_physeq %>%
+  sample_data %>%
+  data.frame() %>% 
+  filter(!(month=="September"&Upwelling=="Upwelling")) %>%
+  group_by(Comp_Group_Hier_Colors) %>%
+  summarize(median_hill0 = median(Richness),
+            sd_hill0 = sd(Richness),
+            median_hill2 = median(Simpson),
+            sd_hill2 = sd(Simpson))
+```
+
+```
+## # A tibble: 4 × 5
+##   Comp_Group_Hier_Colors median_hill0 sd_hill0 median_hill2 sd_hill2
+##   <chr>                         <dbl>    <dbl>        <dbl>    <dbl>
+## 1 Deep (May)                      404     62.3        10.2      2.56
+## 2 Deep (September)                475     93.5        13.7      9.39
+## 3 Shallow_May                     266     76.8        18.2      5.50
+## 4 Shallow_September               473     60.7         6.84     1.89
+```

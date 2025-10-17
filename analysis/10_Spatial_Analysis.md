@@ -1,7 +1,7 @@
 ---
 title: "Spatial Analysis"
 author: "Augustus Pendleton"
-date: "01 July, 2025"
+date: "17 October, 2025"
 output:
   html_document:
     code_folding: show
@@ -1067,6 +1067,70 @@ depth_decay <- tidy_dist_decay %>%
            hjust = 0,
            label = labs,
            parse = TRUE)
+
+tidy_dist_decay %>%
+  filter(month.x == month.y) %>%
+  nest_by(month.x) %>%
+  mutate(cors = list(cor.test(1 - data$dist, data$depth_dist, method = "spearman"))) %>%
+  pull(cors)
+```
+
+```
+## [[1]]
+## 
+## 	Spearman's rank correlation rho
+## 
+## data:  1 - data$dist and data$depth_dist
+## S = 36749713, p-value < 2.2e-16
+## alternative hypothesis: true rho is not equal to 0
+## sample estimates:
+##        rho 
+## -0.4979765 
+## 
+## 
+## [[2]]
+## 
+## 	Spearman's rank correlation rho
+## 
+## data:  1 - data$dist and data$depth_dist
+## S = 111784492, p-value < 2.2e-16
+## alternative hypothesis: true rho is not equal to 0
+## sample estimates:
+##        rho 
+## -0.6484621
+```
+
+```r
+tidy_dist_decay %>%
+  filter(month.x == month.y) %>%
+  nest_by(month.x) %>%
+  mutate(cors = list(cor.test(1 - data$dist, data$geo_dist, method = "spearman"))) %>%
+  pull(cors)
+```
+
+```
+## [[1]]
+## 
+## 	Spearman's rank correlation rho
+## 
+## data:  1 - data$dist and data$geo_dist
+## S = 25354521, p-value = 0.4425
+## alternative hypothesis: true rho is not equal to 0
+## sample estimates:
+##         rho 
+## -0.03349039 
+## 
+## 
+## [[2]]
+## 
+## 	Spearman's rank correlation rho
+## 
+## data:  1 - data$dist and data$geo_dist
+## S = 71049412, p-value = 0.1942
+## alternative hypothesis: true rho is not equal to 0
+## sample estimates:
+##         rho 
+## -0.04775057
 ```
 
 
@@ -1183,7 +1247,7 @@ map(formulas, \(form){
 ## [1] 0.001
 ## 
 ## $Geo
-## [1] 0.075
+## [1] 0.069
 ```
 
 Then, we remake this figure, to be simpler and clearer:
@@ -1354,7 +1418,7 @@ sessioninfo::session_info()
 ##  collate  en_US.UTF-8
 ##  ctype    en_US.UTF-8
 ##  tz       America/New_York
-##  date     2025-07-01
+##  date     2025-10-17
 ##  pandoc   3.1.1 @ /usr/lib/rstudio-server/bin/quarto/bin/tools/ (via rmarkdown)
 ## 
 ## ─ Packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

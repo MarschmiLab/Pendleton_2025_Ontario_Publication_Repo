@@ -1,12 +1,12 @@
 # Report for collapsed table: faprotax_outputs/func_table.tsv
-# Collapsed table generated on: 2025.04.01 10:20:35
+# Collapsed table generated on: 2025.10.17 15:26:23
 # Original table: input_table.tsv
 # Details:
-#  Original classical table contained 7278 rows and 74 columns
-#  After filtering rows & columns, obtained a table containing 7278 rows & 72 columns
-#  After (potentially) filtering out records based on name, obtained a table comprising 7278 records & 72 data entries per record
+#  Original classical table contained 7279 rows and 74 columns
+#  After filtering rows & columns, obtained a table containing 7279 rows & 72 columns
+#  After (potentially) filtering out records based on name, obtained a table comprising 7279 records & 72 data entries per record
 # Used command:
-#   FAPROTAX_1.2.10/collapse_table.py -i input_table.tsv -g FAPROTAX_1.2.10/FAPROTAX.txt -d taxonomy --omit_columns 0 -f -o faprotax_outputs/func_table.tsv -r faprotax_outputs/fapro_report.txt
+#   FAPROTAX_1.2.10/collapse_table.py -i input_table.tsv -g FAPROTAX_1.2.10/FAPROTAX.txt -d taxonomy --out_groups2records_table faprotax_outputs/asv_funs.tsv --omit_columns 0 -f -o faprotax_outputs/func_table.tsv -r faprotax_outputs/fapro_report.txt
 #
 # Summary of group assignments:
 #   methanotrophy: 35 records
@@ -42,7 +42,7 @@
 #   chitinolysis: 3 records
 #   knallgas_bacteria: 1 records
 #   dark_hydrogen_oxidation: 30 records
-#   nitrogen_fixation: 18 records
+#   nitrogen_fixation: 17 records
 #   nitrate_ammonification: 2 records
 #   nitrite_ammonification: 2 records
 #   nitrite_respiration: 3 records
@@ -51,12 +51,12 @@
 #   dark_sulfide_oxidation: 4 records
 #   dark_sulfur_oxidation: 1 records
 #   dark_thiosulfate_oxidation: 1 records
-#   dark_oxidation_of_sulfur_compounds: 10 records
+#   dark_oxidation_of_sulfur_compounds: 9 records
 #   manganese_oxidation: 3 records
 #   manganese_respiration: 0 records
 #   ligninolysis: 0 records
-#   fermentation: 94 records
-#   aerobic_chemoheterotrophy: 600 records
+#   fermentation: 93 records
+#   aerobic_chemoheterotrophy: 598 records
 #   invertebrate_parasites: 0 records
 #   human_pathogens_septicemia: 0 records
 #   human_pathogens_pneumonia: 1 records
@@ -72,21 +72,21 @@
 #   animal_parasites_or_symbionts: 47 records
 #   plant_pathogen: 1 records
 #   oil_bioremediation: 0 records
-#   aromatic_hydrocarbon_degradation: 3 records
-#   aromatic_compound_degradation: 16 records
-#   aliphatic_non_methane_hydrocarbon_degradation: 4 records
-#   hydrocarbon_degradation: 39 records
+#   aromatic_hydrocarbon_degradation: 2 records
+#   aromatic_compound_degradation: 15 records
+#   aliphatic_non_methane_hydrocarbon_degradation: 3 records
+#   hydrocarbon_degradation: 38 records
 #   dark_iron_oxidation: 1 records
 #   iron_respiration: 7 records
 #   nitrate_respiration: 30 records
-#   nitrate_reduction: 50 records
+#   nitrate_reduction: 49 records
 #   nitrogen_respiration: 30 records
 #   fumarate_respiration: 2 records
-#   intracellular_parasites: 420 records
+#   intracellular_parasites: 415 records
 #   chlorate_reducers: 6 records
-#   predatory_or_exoparasitic: 205 records
+#   predatory_or_exoparasitic: 203 records
 #   chloroplasts: 0 records
-#   nonphotosynthetic_cyanobacteria: 39 records
+#   nonphotosynthetic_cyanobacteria: 40 records
 #   photosynthetic_cyanobacteria: 157 records
 #   anoxygenic_photoautotrophy_H2_oxidizing: 0 records
 #   anoxygenic_photoautotrophy_S_oxidizing: 1 records
@@ -98,14 +98,14 @@
 #   photoheterotrophy: 18 records
 #   phototrophy: 175 records
 #   plastic_degradation: 1 records
-#   ureolysis: 30 records
+#   ureolysis: 28 records
 #   reductive_acetogenesis: 0 records
-#   chemoheterotrophy: 870 records
+#   chemoheterotrophy: 865 records
 #
 # Loaded 92 groups comprising 8355 members (5060 unique members)
-# Established 3658 assignments of records to groups
-# 1764 out of 7278 records (24.2374 %) were assigned to at least one group
-# 5514 out of 7278 records (75.7626 %) could not be assigned to any group (leftovers)
+# Established 3635 assignments of records to groups
+# 1752 out of 7279 records (24.0692 %) were assigned to at least one group
+# 5527 out of 7279 records (75.9308 %) could not be assigned to any group (leftovers)
 # 67 groups were represented (i.e. associated with at least one record)
 # Detailed group assignments are listed below
 
@@ -133,7 +133,7 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylomonas; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylosarcina; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylovulum; NA
-    Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylovulum; NA
+    Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
@@ -262,7 +262,7 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylomonas; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylosarcina; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylovulum; NA
-    Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylovulum; NA
+    Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
@@ -547,7 +547,7 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Rhodocyclaceae; Sulfuritalea; hydrogenivorans
 
 
-# nitrogen_fixation (18 records):
+# nitrogen_fixation (17 records):
     Archaea; Halobacterota; Methanomicrobia; Methanomicrobiales; Methanospirillaceae; Methanospirillum; NA
     Archaea; Halobacterota; Methanomicrobia; Methanomicrobiales; Methanospirillaceae; Methanospirillum; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Leptolyngbyales; Leptolyngbyaceae; Calothrix KVSF5; NA
@@ -557,7 +557,6 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Beggiatoales; Beggiatoaceae; Beggiatoa; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Beggiatoales; Beggiatoaceae; Beggiatoa; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Beggiatoales; Beggiatoaceae; Beggiatoa; NA
-    Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Oxalobacteraceae; Herbaspirillum; rhizosphaerae
     Bacteria; Proteobacteria; Gammaproteobacteria; Pseudomonadales; Pseudomonadaceae; Azotobacter; NA
     Bacteria; Proteobacteria; Magnetococcia; Magnetococcales; Magnetococcaceae; Magnetococcus; NA
     Bacteria; Proteobacteria; Magnetococcia; Magnetococcales; Magnetococcaceae; Magnetococcus; NA
@@ -632,8 +631,7 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Rhodocyclaceae; Sulfuritalea; hydrogenivorans
 
 
-# dark_oxidation_of_sulfur_compounds (10 records):
-    Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Beijerinckiaceae; Bosea; NA
+# dark_oxidation_of_sulfur_compounds (9 records):
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Beijerinckiaceae; Bosea; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Beggiatoales; Beggiatoaceae; Beggiatoa; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Beggiatoales; Beggiatoaceae; Beggiatoa; NA
@@ -657,7 +655,7 @@
 # ligninolysis (0 records):
 
 
-# fermentation (94 records):
+# fermentation (93 records):
     Bacteria; Acidobacteriota; Holophagae; Holophagales; Holophagaceae; Geothrix; NA
     Bacteria; Acidobacteriota; Holophagae; Holophagales; Holophagaceae; Holophaga; NA
     Bacteria; Actinobacteriota; Actinobacteria; Bifidobacteriales; Bifidobacteriaceae; Bifidobacterium; NA
@@ -693,7 +691,6 @@
     Bacteria; Bacteroidota; Bacteroidia; Bacteroidales; Paludibacteraceae; Paludibacter; NA
     Bacteria; Bacteroidota; Bacteroidia; Bacteroidales; Paludibacteraceae; Paludibacter; NA
     Bacteria; Bacteroidota; Bacteroidia; Bacteroidales; Rikenellaceae; Alistipes; NA
-    Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Flavobacteriaceae; Algibacter; NA
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Flavobacteriaceae; Capnocytophaga; sputigena
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Weeksellaceae; Cloacibacterium; NA
     Bacteria; Deinococcota; Deinococci; Deinococcales; Trueperaceae; Truepera; NA
@@ -729,7 +726,6 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Aeromonadaceae; Aeromonas; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Aeromonadaceae; Aeromonas; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Klebsiella; NA
-    Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Pasteurellaceae; Haemophilus; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Succinivibrionaceae; Succinivibrio; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Pseudomonadales; Moraxellaceae; Enhydrobacter; aerosaccus
     Bacteria; Proteobacteria; Gammaproteobacteria; Pseudomonadales; Moraxellaceae; Enhydrobacter; NA
@@ -752,9 +748,10 @@
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Opitutales; Opitutaceae; Opitutus; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Opitutales; Opitutaceae; Opitutus; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Verrucomicrobium; NA
+    Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Verrucomicrobium; NA
 
 
-# aerobic_chemoheterotrophy (600 records):
+# aerobic_chemoheterotrophy (598 records):
     Bacteria; Acidobacteriota; Acidobacteriae; Acidobacteriales; Acidobacteriaceae (Subgroup 1); Terriglobus; NA
     Bacteria; Acidobacteriota; Acidobacteriae; Bryobacterales; Bryobacteraceae; Bryobacter; NA
     Bacteria; Acidobacteriota; Acidobacteriae; Bryobacterales; Bryobacteraceae; Bryobacter; NA
@@ -793,7 +790,7 @@
     Bacteria; Actinobacteriota; Actinobacteria; Micrococcales; Microbacteriaceae; Leucobacter; komagatae
     Bacteria; Actinobacteriota; Actinobacteria; Micrococcales; Microbacteriaceae; Lysinimonas; NA
     Bacteria; Actinobacteriota; Actinobacteria; Micrococcales; Microbacteriaceae; NA; NA
-    Bacteria; Actinobacteriota; Actinobacteria; Micrococcales; Microbacteriaceae; Rhodoluna; NA
+    Bacteria; Actinobacteriota; Actinobacteria; Micrococcales; Microbacteriaceae; NA; NA
     Bacteria; Actinobacteriota; Actinobacteria; Micrococcales; Micrococcaceae; Micrococcus; NA
     Bacteria; Actinobacteriota; Actinobacteria; Micromonosporales; Micromonosporaceae; Micromonospora; NA
     Bacteria; Actinobacteriota; Actinobacteria; Propionibacteriales; Propionibacteriaceae; Friedmanniella; NA
@@ -825,9 +822,9 @@
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; Algoriphagus; marisflavi
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; Algoriphagus; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; Algoriphagus; NA
+    Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; Aureibacter; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; Ekhidna; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; Ekhidna; NA
-    Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; NA; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; NA; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; NA; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; NA; NA
@@ -971,7 +968,6 @@
     Bacteria; Planctomycetota; Planctomycetes; Isosphaerales; Isosphaeraceae; Singulisphaera; NA
     Bacteria; Planctomycetota; Planctomycetes; Isosphaerales; Isosphaeraceae; Singulisphaera; NA
     Bacteria; Planctomycetota; Planctomycetes; Isosphaerales; Isosphaeraceae; Singulisphaera; NA
-    Bacteria; Planctomycetota; Planctomycetes; Isosphaerales; Isosphaeraceae; Singulisphaera; NA
     Bacteria; Planctomycetota; Planctomycetes; Pirellulales; Pirellulaceae; Blastopirellula; NA
     Bacteria; Planctomycetota; Planctomycetes; Pirellulales; Pirellulaceae; Blastopirellula; NA
     Bacteria; Planctomycetota; Planctomycetes; Pirellulales; Pirellulaceae; Blastopirellula; NA
@@ -1039,9 +1035,9 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Reyranellales; Reyranellaceae; Reyranella; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Reyranellales; Reyranellaceae; Reyranella; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Beijerinckiaceae; Bosea; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Beijerinckiaceae; Bosea; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Beijerinckiaceae; Microvirga; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Devosiaceae; Devosia; geojensis
+    Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Hyphomicrobiaceae; Hyphomicrobium; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Hyphomicrobiaceae; Hyphomicrobium; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Hyphomicrobiaceae; Hyphomicrobium; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Hyphomicrobiaceae; Hyphomicrobium; NA
@@ -1085,8 +1081,8 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; SAR11 clade; NA; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; SAR11 clade; NA; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; SAR11 clade; NA; NA; NA
+    Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Altererythrobacter; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Hephaestia; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; NA; NA
@@ -1100,6 +1096,7 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Novosphingobium; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Novosphingobium; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Novosphingobium; NA
+    Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Parablastomonas; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Parablastomonas; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Parablastomonas; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Parablastomonas; NA
@@ -1140,7 +1137,6 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Sphingorhabdus; wooponensis
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Sphingorhabdus; wooponensis
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Sphingosinicella; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Stakelama; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Comamonadaceae; Acidovorax; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Comamonadaceae; Hydrogenophaga; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Comamonadaceae; Hydrogenophaga; NA
@@ -1160,7 +1156,6 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Rhodocyclaceae; Dechloromonas; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Rhodocyclaceae; Dechloromonas; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Klebsiella; NA
-    Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Pasteurellaceae; Haemophilus; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Shewanellaceae; Shewanella; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Shewanellaceae; Shewanella; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Vibrionaceae; Candidatus Photodesmus; NA
@@ -1298,7 +1293,6 @@
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Brevifollis; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Brevifollis; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Brevifollis; NA
-    Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Brevifollis; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; NA; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; NA; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; NA; NA
@@ -1354,6 +1348,7 @@
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Prosthecobacter; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Roseimicrobium; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Roseimicrobium; NA
+    Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Verrucomicrobium; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Verrucomicrobium; NA
 
 
@@ -1519,7 +1514,7 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Coxiellales; Coxiellaceae; Coxiella; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Coxiellales; Coxiellaceae; Coxiella; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Coxiellales; Coxiellaceae; Coxiella; NA
-    Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Pasteurellaceae; Haemophilus; NA
+    Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Pasteurellaceae; NA; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Francisellales; Francisellaceae; [Caedibacter] taeniospiralis group; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Francisellales; Francisellaceae; [Caedibacter] taeniospiralis group; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Francisellales; Francisellaceae; [Caedibacter] taeniospiralis group; NA
@@ -1535,16 +1530,14 @@
 # oil_bioremediation (0 records):
 
 
-# aromatic_hydrocarbon_degradation (3 records):
-    Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
+# aromatic_hydrocarbon_degradation (2 records):
     Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
     Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
 
 
-# aromatic_compound_degradation (16 records):
+# aromatic_compound_degradation (15 records):
     Bacteria; Acidobacteriota; Holophagae; Holophagales; Holophagaceae; Holophaga; NA
     Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Gordonia; NA
-    Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
     Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
     Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
     Bacteria; Desulfobacterota; Desulfobacteria; Desulfatiglandales; Desulfatiglandaceae; Desulfatiglans; NA
@@ -1560,15 +1553,13 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Xanthomonadales; Xanthomonadaceae; Stenotrophomonas; maltophilia
 
 
-# aliphatic_non_methane_hydrocarbon_degradation (4 records):
-    Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
+# aliphatic_non_methane_hydrocarbon_degradation (3 records):
     Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
     Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Pseudomonadales; Moraxellaceae; Alkanindiges; illinoisensis
 
 
-# hydrocarbon_degradation (39 records):
-    Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
+# hydrocarbon_degradation (38 records):
     Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
     Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
     Bacteria; Methylomirabilota; Methylomirabilia; Methylomirabilales; Methylomirabilaceae; Candidatus Methylomirabilis; NA
@@ -1594,7 +1585,7 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylomonas; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylosarcina; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylovulum; NA
-    Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylovulum; NA
+    Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
@@ -1656,7 +1647,7 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Xanthomonadales; Xanthomonadaceae; Stenotrophomonas; maltophilia
 
 
-# nitrate_reduction (50 records):
+# nitrate_reduction (49 records):
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Spirosomaceae; Emticicia; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Spirosomaceae; Emticicia; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Spirosomaceae; Emticicia; NA
@@ -1692,7 +1683,6 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Aeromonadaceae; Aeromonas; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Aeromonadaceae; Aeromonas; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Klebsiella; NA
-    Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Pasteurellaceae; Haemophilus; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Shewanellaceae; Shewanella; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Shewanellaceae; Shewanella; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylosarcina; NA
@@ -1747,7 +1737,7 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Rhodocyclaceae; Ferribacterium; limneticum
 
 
-# intracellular_parasites (420 records):
+# intracellular_parasites (415 records):
     Bacteria; Proteobacteria; Alphaproteobacteria; Holosporales; Holosporaceae; Holospora; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Holosporales; Holosporaceae; Holospora; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Holosporales; Holosporaceae; Holospora; NA
@@ -1781,7 +1771,7 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Holosporales; Holosporaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Holosporales; Holosporaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Holosporales; Holosporaceae; NA; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; AB1; NA; NA
+    Bacteria; Proteobacteria; Alphaproteobacteria; Holosporales; Holosporaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; AB1; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; AB1; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; AB1; NA; NA
@@ -1805,7 +1795,6 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Candidatus Hepatincola; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Candidatus Hepatincola; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Candidatus Hepatincola; NA; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Candidatus Jidaibacter; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Candidatus Jidaibacter; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Candidatus Jidaibacter; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Candidatus Jidaibacter; NA; NA
@@ -1847,6 +1836,7 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Fokiniaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Fokiniaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Fokiniaceae; NA; NA
+    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Fokiniaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Midichloriaceae; Candidatus Midichloria; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Midichloriaceae; Candidatus Midichloria; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Midichloriaceae; Candidatus Midichloria; NA
@@ -1913,11 +1903,6 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; NA; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; NA; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; NA; NA; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; NA; NA; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; NA; NA; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; NA; NA; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; NA; NA; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; NA; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Cryptoprodotis; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Cryptoprodotis; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Cryptoprodotis; NA
@@ -1927,6 +1912,7 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Cryptoprodotis; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Cryptoprodotis; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Cryptoprodotis; NA
+    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Gigarickettsia; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Hemipteriphilus; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Hemipteriphilus; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Hemipteriphilus; NA
@@ -1946,6 +1932,8 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Trichorickettsia; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Trichorickettsia; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Trichorickettsia; NA
+    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Candidatus Trichorickettsia; NA
+    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; NA; NA
@@ -2024,9 +2012,6 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Rickettsia; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; Rickettsiaceae; Rickettsia; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; SM2D12; NA; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; SM2D12; NA; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; SM2D12; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; SM2D12; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; SM2D12; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rickettsiales; SM2D12; NA; NA
@@ -2133,9 +2118,9 @@
     Bacteria; Verrucomicrobiota; Chlamydiae; Chlamydiales; NA; NA; NA
     Bacteria; Verrucomicrobiota; Chlamydiae; Chlamydiales; NA; NA; NA
     Bacteria; Verrucomicrobiota; Chlamydiae; Chlamydiales; NA; NA; NA
+    Bacteria; Verrucomicrobiota; Chlamydiae; Chlamydiales; NA; NA; NA
     Bacteria; Verrucomicrobiota; Chlamydiae; Chlamydiales; Parachlamydiaceae; Candidatus Protochlamydia; NA
     Bacteria; Verrucomicrobiota; Chlamydiae; Chlamydiales; Parachlamydiaceae; Candidatus Protochlamydia; NA
-    Bacteria; Verrucomicrobiota; Chlamydiae; Chlamydiales; Parachlamydiaceae; NA; NA
     Bacteria; Verrucomicrobiota; Chlamydiae; Chlamydiales; Parachlamydiaceae; NA; NA
     Bacteria; Verrucomicrobiota; Chlamydiae; Chlamydiales; Parachlamydiaceae; NA; NA
     Bacteria; Verrucomicrobiota; Chlamydiae; Chlamydiales; Parachlamydiaceae; NA; NA
@@ -2179,7 +2164,7 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Rhodocyclaceae; Dechloromonas; NA
 
 
-# predatory_or_exoparasitic (205 records):
+# predatory_or_exoparasitic (203 records):
     Bacteria; Bdellovibrionota; Bdellovibrionia; Bacteriovoracales; Bacteriovoracaceae; Bacteriovorax; NA
     Bacteria; Bdellovibrionota; Bdellovibrionia; Bacteriovoracales; Bacteriovoracaceae; Bacteriovorax; NA
     Bacteria; Bdellovibrionota; Bdellovibrionia; Bacteriovoracales; Bacteriovoracaceae; Bacteriovorax; NA
@@ -2300,8 +2285,6 @@
     Bacteria; Bdellovibrionota; Bdellovibrionia; Bdellovibrionales; Bdellovibrionaceae; Bdellovibrio; NA
     Bacteria; Bdellovibrionota; Bdellovibrionia; Bdellovibrionales; Bdellovibrionaceae; Bdellovibrio; NA
     Bacteria; Bdellovibrionota; Bdellovibrionia; Bdellovibrionales; Bdellovibrionaceae; Bdellovibrio; NA
-    Bacteria; Bdellovibrionota; Bdellovibrionia; Bdellovibrionales; Bdellovibrionaceae; Bdellovibrio; NA
-    Bacteria; Bdellovibrionota; Bdellovibrionia; Bdellovibrionales; Bdellovibrionaceae; OM27 clade; NA
     Bacteria; Bdellovibrionota; Bdellovibrionia; Bdellovibrionales; Bdellovibrionaceae; OM27 clade; NA
     Bacteria; Bdellovibrionota; Bdellovibrionia; Bdellovibrionales; Bdellovibrionaceae; OM27 clade; NA
     Bacteria; Bdellovibrionota; Bdellovibrionia; Bdellovibrionales; Bdellovibrionaceae; OM27 clade; NA
@@ -2390,7 +2373,7 @@
 # chloroplasts (0 records):
 
 
-# nonphotosynthetic_cyanobacteria (39 records):
+# nonphotosynthetic_cyanobacteria (40 records):
     Bacteria; Cyanobacteria; Sericytochromatia; NA; NA; NA; NA
     Bacteria; Cyanobacteria; Sericytochromatia; NA; NA; NA; NA
     Bacteria; Cyanobacteria; Sericytochromatia; NA; NA; NA; NA
@@ -2417,6 +2400,7 @@
     Bacteria; Cyanobacteria; Vampirivibrionia; Gastranaerophilales; NA; NA; NA
     Bacteria; Cyanobacteria; Vampirivibrionia; Gastranaerophilales; NA; NA; NA
     Bacteria; Cyanobacteria; Vampirivibrionia; Gastranaerophilales; NA; NA; NA
+    Bacteria; Cyanobacteria; Vampirivibrionia; NA; NA; NA; NA
     Bacteria; Cyanobacteria; Vampirivibrionia; NA; NA; NA; NA
     Bacteria; Cyanobacteria; Vampirivibrionia; Obscuribacterales; Obscuribacteraceae; Candidatus Obscuribacter; NA
     Bacteria; Cyanobacteria; Vampirivibrionia; Obscuribacterales; Obscuribacteraceae; Candidatus Obscuribacter; NA
@@ -2467,6 +2451,7 @@
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
+    Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Aphanizomenon MDT14a; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Aphanizomenon NIES81; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Aphanizomenon NIES81; NA
@@ -2484,7 +2469,7 @@
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Cylindrospermopsis CRJ1; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Cylindrospermopsis CRJ1; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Dolichospermum NIES41; NA
-    Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Dolichospermum NIES41; NA
+    Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Oscillatoriaceae; NA; NA
@@ -2584,8 +2569,7 @@
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
-    Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
-    Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
+    Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; Synechococcus MBIC10613; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; Synechococcus MBIC10613; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Prochlorotrichaceae; Prochlorothrix PCC-9006; hollandica
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Synechococcaceae; NA; NA
@@ -2641,6 +2625,7 @@
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
+    Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Aphanizomenon MDT14a; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Aphanizomenon NIES81; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Aphanizomenon NIES81; NA
@@ -2658,7 +2643,7 @@
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Cylindrospermopsis CRJ1; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Cylindrospermopsis CRJ1; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Dolichospermum NIES41; NA
-    Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Dolichospermum NIES41; NA
+    Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Oscillatoriaceae; NA; NA
@@ -2758,8 +2743,7 @@
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
-    Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
-    Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
+    Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; Synechococcus MBIC10613; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; Synechococcus MBIC10613; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Prochlorotrichaceae; Prochlorothrix PCC-9006; hollandica
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Synechococcaceae; NA; NA
@@ -2801,6 +2785,7 @@
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
+    Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Aphanizomenon MDT14a; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Aphanizomenon NIES81; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Aphanizomenon NIES81; NA
@@ -2818,7 +2803,7 @@
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Cylindrospermopsis CRJ1; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Cylindrospermopsis CRJ1; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Dolichospermum NIES41; NA
-    Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Dolichospermum NIES41; NA
+    Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Oscillatoriaceae; NA; NA
@@ -2918,8 +2903,7 @@
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
-    Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
-    Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
+    Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; Synechococcus MBIC10613; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; Synechococcus MBIC10613; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Prochlorotrichaceae; Prochlorothrix PCC-9006; hollandica
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Synechococcaceae; NA; NA
@@ -2987,6 +2971,7 @@
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
+    Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; NA; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Aphanizomenon MDT14a; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Aphanizomenon NIES81; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Aphanizomenon NIES81; NA
@@ -3004,7 +2989,7 @@
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Cylindrospermopsis CRJ1; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Cylindrospermopsis CRJ1; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Dolichospermum NIES41; NA
-    Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; Dolichospermum NIES41; NA
+    Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Nostocaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Cyanobacteriales; Oscillatoriaceae; NA; NA
@@ -3104,8 +3089,7 @@
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
-    Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
-    Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; NA; NA
+    Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; Synechococcus MBIC10613; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Cyanobiaceae; Synechococcus MBIC10613; NA
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Prochlorotrichaceae; Prochlorothrix PCC-9006; hollandica
     Bacteria; Cyanobacteria; Cyanobacteriia; Synechococcales; Synechococcaceae; NA; NA
@@ -3134,12 +3118,11 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Pseudomonadales; Moraxellaceae; Acinetobacter; lwoffii
 
 
-# ureolysis (30 records):
+# ureolysis (28 records):
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Spirosomaceae; Emticicia; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Spirosomaceae; Emticicia; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Spirosomaceae; Emticicia; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Spirosomaceae; Emticicia; sediminis
-    Bacteria; Planctomycetota; Planctomycetes; Isosphaerales; Isosphaeraceae; Singulisphaera; NA
     Bacteria; Planctomycetota; Planctomycetes; Isosphaerales; Isosphaeraceae; Singulisphaera; NA
     Bacteria; Planctomycetota; Planctomycetes; Isosphaerales; Isosphaeraceae; Singulisphaera; NA
     Bacteria; Planctomycetota; Planctomycetes; Isosphaerales; Isosphaeraceae; Singulisphaera; NA
@@ -3159,18 +3142,17 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Rhizobiaceae; Aminobacter; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Comamonadaceae; Rhizobacter; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Comamonadaceae; Rhizobacter; NA
-    Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Comamonadaceae; Rhizobacter; NA
-    Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Oxalobacteraceae; Herbaspirillum; rhizosphaerae
     Bacteria; Proteobacteria; Gammaproteobacteria; Pseudomonadales; Pseudomonadaceae; Azotobacter; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Thiotrichales; Thiotrichaceae; Thiothrix; fructosivorans
     Bacteria; Proteobacteria; Gammaproteobacteria; Xanthomonadales; Xanthomonadaceae; Thermomonas; brevis
+    Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Verrucomicrobium; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Verrucomicrobium; NA
 
 
 # reductive_acetogenesis (0 records):
 
 
-# chemoheterotrophy (870 records):
+# chemoheterotrophy (865 records):
     Archaea; Halobacterota; Methanomicrobia; Methanomicrobiales; Methanospirillaceae; Methanospirillum; NA
     Archaea; Halobacterota; Methanomicrobia; Methanomicrobiales; Methanospirillaceae; Methanospirillum; NA
     Archaea; Thermoplasmatota; Thermoplasmata; Methanomassiliicoccales; Methanomassiliicoccaceae; NA; NA
@@ -3200,7 +3182,6 @@
     Bacteria; Acidobacteriota; Holophagae; Holophagales; Holophagaceae; NA; NA
     Bacteria; Acidobacteriota; Holophagae; Holophagales; Holophagaceae; NA; NA
     Bacteria; Acidobacteriota; Holophagae; Holophagales; Holophagaceae; NA; NA
-    Bacteria; Acidobacteriota; Vicinamibacteria; Vicinamibacterales; NA; NA; NA
     Bacteria; Acidobacteriota; Vicinamibacteria; Vicinamibacterales; NA; NA; NA
     Bacteria; Acidobacteriota; Vicinamibacteria; Vicinamibacterales; NA; NA; NA
     Bacteria; Acidobacteriota; Vicinamibacteria; Vicinamibacterales; NA; NA; NA
@@ -3260,7 +3241,6 @@
     Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Gordonia; NA
     Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
     Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
-    Bacteria; Actinobacteriota; Actinobacteria; Corynebacteriales; Nocardiaceae; Rhodococcus; NA
     Bacteria; Actinobacteriota; Actinobacteria; Frankiales; Geodermatophilaceae; Blastococcus; NA
     Bacteria; Actinobacteriota; Actinobacteria; Frankiales; Geodermatophilaceae; Blastococcus; NA
     Bacteria; Actinobacteriota; Actinobacteria; Frankiales; Sporichthyaceae; Sporichthya; NA
@@ -3282,7 +3262,7 @@
     Bacteria; Actinobacteriota; Actinobacteria; Micrococcales; Microbacteriaceae; Leucobacter; komagatae
     Bacteria; Actinobacteriota; Actinobacteria; Micrococcales; Microbacteriaceae; Lysinimonas; NA
     Bacteria; Actinobacteriota; Actinobacteria; Micrococcales; Microbacteriaceae; NA; NA
-    Bacteria; Actinobacteriota; Actinobacteria; Micrococcales; Microbacteriaceae; Rhodoluna; NA
+    Bacteria; Actinobacteriota; Actinobacteria; Micrococcales; Microbacteriaceae; NA; NA
     Bacteria; Actinobacteriota; Actinobacteria; Micrococcales; Micrococcaceae; Micrococcus; NA
     Bacteria; Actinobacteriota; Actinobacteria; Micromonosporales; Micromonosporaceae; Micromonospora; NA
     Bacteria; Actinobacteriota; Actinobacteria; Propionibacteriales; Propionibacteriaceae; Friedmanniella; NA
@@ -3345,9 +3325,9 @@
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; Algoriphagus; marisflavi
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; Algoriphagus; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; Algoriphagus; NA
+    Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; Aureibacter; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; Ekhidna; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; Ekhidna; NA
-    Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; NA; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; NA; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; NA; NA
     Bacteria; Bacteroidota; Bacteroidia; Cytophagales; Cyclobacteriaceae; NA; NA
@@ -3389,7 +3369,6 @@
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Crocinitomicaceae; Crocinitomix; NA
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Crocinitomicaceae; Crocinitomix; NA
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Flavobacteriaceae; Actibacter; NA
-    Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Flavobacteriaceae; Algibacter; NA
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Flavobacteriaceae; Capnocytophaga; sputigena
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Flavobacteriaceae; Citreitalea; NA
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Flavobacteriaceae; Flavobacterium; anseonense
@@ -3470,6 +3449,7 @@
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Flavobacteriaceae; NA; NA
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Flavobacteriaceae; NA; NA
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Flavobacteriaceae; NA; NA
+    Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Flavobacteriaceae; NA; NA
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Flavobacteriaceae; Ulvibacter; NA
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Weeksellaceae; Chryseobacterium; hominis
     Bacteria; Bacteroidota; Bacteroidia; Flavobacteriales; Weeksellaceae; Chryseobacterium; NA
@@ -3502,7 +3482,6 @@
     Bacteria; Chloroflexi; Anaerolineae; Anaerolineales; Anaerolineaceae; Anaerolinea; NA
     Bacteria; Chloroflexi; Anaerolineae; Anaerolineales; Anaerolineaceae; Anaerolinea; NA
     Bacteria; Chloroflexi; Anaerolineae; Anaerolineales; Anaerolineaceae; Leptolinea; NA
-    Bacteria; Chloroflexi; Anaerolineae; Anaerolineales; Anaerolineaceae; NA; NA
     Bacteria; Chloroflexi; Anaerolineae; Anaerolineales; Anaerolineaceae; NA; NA
     Bacteria; Chloroflexi; Anaerolineae; Anaerolineales; Anaerolineaceae; NA; NA
     Bacteria; Chloroflexi; Anaerolineae; Anaerolineales; Anaerolineaceae; NA; NA
@@ -3590,7 +3569,6 @@
     Bacteria; Planctomycetota; Planctomycetes; Isosphaerales; Isosphaeraceae; Singulisphaera; NA
     Bacteria; Planctomycetota; Planctomycetes; Isosphaerales; Isosphaeraceae; Singulisphaera; NA
     Bacteria; Planctomycetota; Planctomycetes; Isosphaerales; Isosphaeraceae; Singulisphaera; NA
-    Bacteria; Planctomycetota; Planctomycetes; Isosphaerales; Isosphaeraceae; Singulisphaera; NA
     Bacteria; Planctomycetota; Planctomycetes; Pirellulales; Pirellulaceae; Blastopirellula; NA
     Bacteria; Planctomycetota; Planctomycetes; Pirellulales; Pirellulaceae; Blastopirellula; NA
     Bacteria; Planctomycetota; Planctomycetes; Pirellulales; Pirellulaceae; Blastopirellula; NA
@@ -3658,10 +3636,10 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Reyranellales; Reyranellaceae; Reyranella; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Reyranellales; Reyranellaceae; Reyranella; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Beijerinckiaceae; Bosea; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Beijerinckiaceae; Bosea; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Beijerinckiaceae; Methylocystis; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Beijerinckiaceae; Microvirga; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Devosiaceae; Devosia; geojensis
+    Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Hyphomicrobiaceae; Hyphomicrobium; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Hyphomicrobiaceae; Hyphomicrobium; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Hyphomicrobiaceae; Hyphomicrobium; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Hyphomicrobiaceae; Hyphomicrobium; NA
@@ -3705,8 +3683,8 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; SAR11 clade; NA; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; SAR11 clade; NA; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; SAR11 clade; NA; NA; NA
+    Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Altererythrobacter; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Hephaestia; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; NA; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; NA; NA
@@ -3720,6 +3698,7 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Novosphingobium; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Novosphingobium; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Novosphingobium; NA
+    Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Parablastomonas; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Parablastomonas; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Parablastomonas; NA
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Parablastomonas; NA
@@ -3760,7 +3739,6 @@
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Sphingorhabdus; wooponensis
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Sphingorhabdus; wooponensis
     Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Sphingosinicella; NA
-    Bacteria; Proteobacteria; Alphaproteobacteria; Sphingomonadales; Sphingomonadaceae; Stakelama; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Burkholderiaceae; Lautropia; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Burkholderiaceae; Lautropia; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Burkholderiales; Comamonadaceae; Acidovorax; NA
@@ -3792,7 +3770,6 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Aeromonadaceae; Aeromonas; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Aeromonadaceae; Aeromonas; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Klebsiella; NA
-    Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Pasteurellaceae; Haemophilus; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Shewanellaceae; Shewanella; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Shewanellaceae; Shewanella; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; Succinivibrionaceae; Succinivibrio; NA
@@ -3855,7 +3832,7 @@
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylomonas; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylosarcina; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylovulum; NA
-    Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylovulum; NA
+    Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
     Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA
@@ -3984,7 +3961,6 @@
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Brevifollis; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Brevifollis; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Brevifollis; NA
-    Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Brevifollis; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; NA; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; NA; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; NA; NA
@@ -4040,6 +4016,7 @@
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Prosthecobacter; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Roseimicrobium; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Roseimicrobium; NA
+    Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Verrucomicrobium; NA
     Bacteria; Verrucomicrobiota; Verrucomicrobiae; Verrucomicrobiales; Verrucomicrobiaceae; Verrucomicrobium; NA
 
 

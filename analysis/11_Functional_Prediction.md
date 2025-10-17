@@ -1,7 +1,7 @@
 ---
 title: "Functional_Prediction" 
 author: "Augustus Pendleton"
-date: "27 June, 2025"
+date: "17 October, 2025"
 output:
   html_document:
     code_folding: show
@@ -92,12 +92,12 @@ write_tsv(input_table, file = "data/11_functional_exports/faprotax/input_table.t
 
 mkdir -p faprotax_outputs
 
-conda create -n "python_for_faprotax" python=3.7.6 ipython
+# conda create -n "python_for_faprotax" python=3.7.6 ipython
 
 conda activate python_for_faprotax
 conda install numpy
 
-FAPROTAX_1.2.10/collapse_table.py -i input_table.tsv -g FAPROTAX_1.2.10/FAPROTAX.txt -d taxonomy --omit_columns 0 -f -o faprotax_outputs/func_table.tsv -r faprotax_outputs/fapro_report.txt
+FAPROTAX_1.2.10/collapse_table.py -i input_table.tsv -g FAPROTAX_1.2.10/FAPROTAX.txt -d taxonomy --out_groups2records_table faprotax_outputs/asv_funs.tsv --omit_columns 0 -f -o faprotax_outputs/func_table.tsv -r faprotax_outputs/fapro_report.txt
 
 cd ../../../
 
@@ -111,7 +111,7 @@ readLines("data/11_functional_exports/faprotax/faprotax_outputs/fapro_report.txt
 ```
 
 ```
-## [1] "# 1764 out of 7278 records (24.2374 %) were assigned to at least one group"
+## [1] "# 1752 out of 7279 records (24.0692 %) were assigned to at least one group"
 ```
 
 ```r
@@ -119,7 +119,7 @@ readLines("data/11_functional_exports/faprotax/faprotax_outputs/fapro_report.txt
 ```
 
 ```
-## [1] "# 5514 out of 7278 records (75.7626 %) could not be assigned to any group (leftovers)"
+## [1] "# 5527 out of 7279 records (75.9308 %) could not be assigned to any group (leftovers)"
 ```
 
 This is an important caveat here - so many taxa are unannotated!
@@ -209,6 +209,53 @@ semi_clean_fapro %>%
 ## Writing 15 features with 7 fields and geometry type Point.
 ```
 
+# Seeing which taxa are assigned to specific functions
+
+
+```r
+asv_funs <- read_tsv("data/11_functional_exports/faprotax/faprotax_outputs/asv_funs.tsv", comment = "#") %>%
+  select(where(~ any(. != 0)))
+
+asv_funs %>%
+  filter(sulfur_respiration == 1) %>%
+  pull(record)
+```
+
+```
+## [1] "Bacteria; Desulfobacterota; Desulfuromonadia; Desulfuromonadales; Desulfuromonadaceae; Desulfuromonas; NA"      "Bacteria; Campylobacterota; Campylobacteria; Campylobacterales; Sulfurospirillaceae; Sulfurospirillum; NA"     
+## [3] "Bacteria; Campylobacterota; Campylobacteria; Campylobacterales; Sulfurospirillaceae; Sulfurospirillum; cavolei" "Bacteria; Campylobacterota; Campylobacteria; Campylobacterales; Sulfurospirillaceae; Sulfurospirillum; NA"     
+## [5] "Bacteria; Campylobacterota; Campylobacteria; Campylobacterales; Sulfurospirillaceae; Sulfurospirillum; NA"
+```
+
+```r
+asv_funs %>%
+  filter(methanotrophy == 1) %>%
+  pull(record)
+```
+
+```
+##  [1] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA"                       "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA"                      
+##  [3] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA"                           "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA"                      
+##  [5] "Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Beijerinckiaceae; Methylocystis; NA"                         "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA"                          
+##  [7] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA"                       "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA"                      
+##  [9] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA"                       "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA"                              
+## [11] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA"                       "Bacteria; Methylomirabilota; Methylomirabilia; Methylomirabilales; Methylomirabilaceae; Candidatus Methylomirabilis; NA"
+## [13] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylosarcina; NA"                   "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA"                      
+## [15] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA"                           "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylococcaceae; Methylocaldum; NA"                    
+## [17] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA"                       "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA"                          
+## [19] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylobacter; NA"                    "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylobacter; tundripaludum"        
+## [21] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylomonas; lenta"                  "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylobacter; NA"                   
+## [23] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA"                               "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA"                              
+## [25] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylomonas; NA"                     "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylobacter; NA"                   
+## [27] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA"                           "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylobacter; NA"                   
+## [29] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylococcaceae; Methylocaldum; NA"                     "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylovulum; NA"                    
+## [31] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA"                               "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA"                          
+## [33] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA"                               "Bacteria; Methylomirabilota; Methylomirabilia; Methylomirabilales; Methylomirabilaceae; Candidatus Methylomirabilis; NA"
+## [35] "Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA"
+```
+
+
+
 # Session Info
 
 
@@ -227,7 +274,7 @@ sessioninfo::session_info()
 ##  collate  en_US.UTF-8
 ##  ctype    en_US.UTF-8
 ##  tz       America/New_York
-##  date     2025-06-27
+##  date     2025-10-17
 ##  pandoc   3.1.1 @ /usr/lib/rstudio-server/bin/quarto/bin/tools/ (via rmarkdown)
 ## 
 ## ─ Packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

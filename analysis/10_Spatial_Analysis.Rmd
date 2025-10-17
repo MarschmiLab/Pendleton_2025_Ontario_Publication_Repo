@@ -1035,6 +1035,18 @@ depth_decay <- tidy_dist_decay %>%
            label = labs,
            parse = TRUE)
 
+tidy_dist_decay %>%
+  filter(month.x == month.y) %>%
+  nest_by(month.x) %>%
+  mutate(cors = list(cor.test(1 - data$dist, data$depth_dist, method = "spearman"))) %>%
+  pull(cors)
+
+tidy_dist_decay %>%
+  filter(month.x == month.y) %>%
+  nest_by(month.x) %>%
+  mutate(cors = list(cor.test(1 - data$dist, data$geo_dist, method = "spearman"))) %>%
+  pull(cors)
+
 ```
 
 ```{r FIGURE-2AB, fig.width = 4, fig.height = 7}

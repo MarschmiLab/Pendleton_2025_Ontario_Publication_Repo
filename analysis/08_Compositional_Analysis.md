@@ -1,7 +1,7 @@
 ---
 title: "Compositional Analysis" 
 author: "Augustus Pendleton"
-date: "01 July, 2025"
+date: "17 October, 2025"
 output:
   html_document:
     code_folding: show
@@ -259,18 +259,11 @@ The authors compared many distance matrices (if you're interested, feel free to 
 ```r
 # Distance object derived from absolute abundances - need to use modified GUniFrac to do so!
 
-absolute_wunifrac <- GUniFrac(otu.tab = as.matrix(otu_table(full_abs_physeq)), tree = phy_tree(full_diversity_physeq), alpha = c(0,0.5,1), normalize_counts = FALSE)
-```
+# absolute_wunifrac <- GUniFrac(otu.tab = as.matrix(otu_table(full_abs_physeq)), tree = phy_tree(full_diversity_physeq), alpha = c(0,0.5,1), normalize_counts = FALSE)
+# 
+# save(absolute_wunifrac, file = "data/08_compositional_exports/absolute_wunifrac.RData")
 
-```
-## Accumulate the abundance along the tree branches...
-## Compute pairwise distances ...
-## Completed!
-```
-
-```r
-save(absolute_wunifrac, file = "data/08_compositional_exports/absolute_wunifrac.RData")
-
+load("data/08_compositional_exports/absolute_wunifrac.RData")
 abs_unifrac_dist_0.5 <- as.dist(absolute_wunifrac$unifracs[, , "d_0.5"])
 ```
 
@@ -540,7 +533,7 @@ surf_may_hclust <- surf_may_dist %>%
 # Define a height at which to cut the tree
 height = 0.32
 
-may_surf_groups <- cutree(surf_may_hclust, h = height)
+may_surf_groups <- cutree(surf_may_hclust, k = 4)
 
 # Plot our dendrogram
 may_surf_d <- as.dendrogram(surf_may_hclust)
@@ -565,8 +558,7 @@ ggplot(segment(data)) +
         axis.line.x = element_line(linewidth  = 1),
         axis.ticks.x = element_line(linewidth = 1),
         legend.position = "none") + 
-  scale_color_manual(values = c("#211ed2","#ea8bb9","#79d3df","#ed8114")) + 
-  geom_hline(yintercept = 0.32, linetype = 2, size = 1)
+  scale_color_manual(values = c("#211ed2","#ea8bb9","#79d3df","#ed8114"))
 ```
 
 <img src="../figures/08_Compositional_Analysis/FIGURE-S4A-1.png" style="display: block; margin: auto;" />
@@ -596,7 +588,7 @@ surf_sep_dist <- as.dist(temp_mat[keep_i, keep_i])
 surf_sep_hclust <- surf_sep_dist %>%
   hclust(method = "average")
 
-sep_surf_groups <- cutree(surf_sep_hclust, h = height)
+sep_surf_groups <- cutree(surf_sep_hclust, k = 4)
 
 sep_surf_d <- as.dendrogram(surf_sep_hclust)
 
@@ -620,8 +612,7 @@ ggplot(segment(data)) +
         axis.line.x = element_line(linewidth = 1),
         axis.ticks.x = element_line(linewidth = 1),
         legend.position = "none") + 
-  scale_color_manual(values = c("#64cb74","#f02fb3")) + 
-  geom_hline(yintercept = 0.32, linetype = 2, size = 1)
+  scale_color_manual(values = c("#211ed2","#ea8bb9","#79d3df","#ed8114")) 
 ```
 
 <img src="../figures/08_Compositional_Analysis/FIGURE-S4B-1.png" style="display: block; margin: auto;" />
@@ -1138,7 +1129,7 @@ sessioninfo::session_info()
 ##  collate  en_US.UTF-8
 ##  ctype    en_US.UTF-8
 ##  tz       America/New_York
-##  date     2025-07-01
+##  date     2025-10-17
 ##  pandoc   3.1.1 @ /usr/lib/rstudio-server/bin/quarto/bin/tools/ (via rmarkdown)
 ## 
 ## ─ Packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

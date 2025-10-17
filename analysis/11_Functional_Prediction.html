@@ -1586,7 +1586,7 @@ font-size: 0.95em;
 
 <h1 class="title toc-ignore">Functional_Prediction</h1>
 <h4 class="author">Augustus Pendleton</h4>
-<h4 class="date">27 June, 2025</h4>
+<h4 class="date">17 October, 2025</h4>
 
 </div>
 
@@ -1645,20 +1645,20 @@ write_tsv(input_table, file = &quot;data/11_functional_exports/faprotax/input_ta
 
 mkdir -p faprotax_outputs
 
-conda create -n &quot;python_for_faprotax&quot; python=3.7.6 ipython
+# conda create -n &quot;python_for_faprotax&quot; python=3.7.6 ipython
 
 conda activate python_for_faprotax
 conda install numpy
 
-FAPROTAX_1.2.10/collapse_table.py -i input_table.tsv -g FAPROTAX_1.2.10/FAPROTAX.txt -d taxonomy --omit_columns 0 -f -o faprotax_outputs/func_table.tsv -r faprotax_outputs/fapro_report.txt
+FAPROTAX_1.2.10/collapse_table.py -i input_table.tsv -g FAPROTAX_1.2.10/FAPROTAX.txt -d taxonomy --out_groups2records_table faprotax_outputs/asv_funs.tsv --omit_columns 0 -f -o faprotax_outputs/func_table.tsv -r faprotax_outputs/fapro_report.txt
 
 cd ../../../
 </code></pre>
 <p>How many taxa were assigned at least one function?</p>
 <pre class="r"><code>readLines(&quot;data/11_functional_exports/faprotax/faprotax_outputs/fapro_report.txt&quot;)[107]</code></pre>
-<pre><code>## [1] &quot;# 1764 out of 7278 records (24.2374 %) were assigned to at least one group&quot;</code></pre>
+<pre><code>## [1] &quot;# 1752 out of 7279 records (24.0692 %) were assigned to at least one group&quot;</code></pre>
 <pre class="r"><code>readLines(&quot;data/11_functional_exports/faprotax/faprotax_outputs/fapro_report.txt&quot;)[108]</code></pre>
-<pre><code>## [1] &quot;# 5514 out of 7278 records (75.7626 %) could not be assigned to any group (leftovers)&quot;</code></pre>
+<pre><code>## [1] &quot;# 5527 out of 7279 records (75.9308 %) could not be assigned to any group (leftovers)&quot;</code></pre>
 <p>This is an important caveat here - so many taxa are unannotated!</p>
 </div>
 </div>
@@ -1722,6 +1722,39 @@ semi_clean_fapro %&gt;%
 ## Writing layer `may_e_mt&#39; to data source `analysis/QGIS_Work/may_e_mt.gpkg&#39; using driver `GPKG&#39;
 ## Writing 15 features with 7 fields and geometry type Point.</code></pre>
 </div>
+<div id="seeing-which-taxa-are-assigned-to-specific-functions" class="section level1">
+<h1>Seeing which taxa are assigned to specific functions</h1>
+<pre class="r"><code>asv_funs &lt;- read_tsv(&quot;data/11_functional_exports/faprotax/faprotax_outputs/asv_funs.tsv&quot;, comment = &quot;#&quot;) %&gt;%
+  select(where(~ any(. != 0)))
+
+asv_funs %&gt;%
+  filter(sulfur_respiration == 1) %&gt;%
+  pull(record)</code></pre>
+<pre><code>## [1] &quot;Bacteria; Desulfobacterota; Desulfuromonadia; Desulfuromonadales; Desulfuromonadaceae; Desulfuromonas; NA&quot;      &quot;Bacteria; Campylobacterota; Campylobacteria; Campylobacterales; Sulfurospirillaceae; Sulfurospirillum; NA&quot;     
+## [3] &quot;Bacteria; Campylobacterota; Campylobacteria; Campylobacterales; Sulfurospirillaceae; Sulfurospirillum; cavolei&quot; &quot;Bacteria; Campylobacterota; Campylobacteria; Campylobacterales; Sulfurospirillaceae; Sulfurospirillum; NA&quot;     
+## [5] &quot;Bacteria; Campylobacterota; Campylobacteria; Campylobacterales; Sulfurospirillaceae; Sulfurospirillum; NA&quot;</code></pre>
+<pre class="r"><code>asv_funs %&gt;%
+  filter(methanotrophy == 1) %&gt;%
+  pull(record)</code></pre>
+<pre><code>##  [1] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA&quot;                       &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA&quot;                      
+##  [3] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA&quot;                           &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA&quot;                      
+##  [5] &quot;Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Beijerinckiaceae; Methylocystis; NA&quot;                         &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA&quot;                          
+##  [7] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA&quot;                       &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA&quot;                      
+##  [9] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA&quot;                       &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA&quot;                              
+## [11] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA&quot;                       &quot;Bacteria; Methylomirabilota; Methylomirabilia; Methylomirabilales; Methylomirabilaceae; Candidatus Methylomirabilis; NA&quot;
+## [13] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylosarcina; NA&quot;                   &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA&quot;                      
+## [15] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA&quot;                           &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylococcaceae; Methylocaldum; NA&quot;                    
+## [17] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Crenothrix; NA&quot;                       &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA&quot;                          
+## [19] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylobacter; NA&quot;                    &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylobacter; tundripaludum&quot;        
+## [21] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylomonas; lenta&quot;                  &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylobacter; NA&quot;                   
+## [23] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA&quot;                               &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA&quot;                              
+## [25] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylomonas; NA&quot;                     &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylobacter; NA&quot;                   
+## [27] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA&quot;                           &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylobacter; NA&quot;                   
+## [29] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylococcaceae; Methylocaldum; NA&quot;                     &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; Methylovulum; NA&quot;                    
+## [31] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA&quot;                               &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA&quot;                          
+## [33] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; NA; NA&quot;                               &quot;Bacteria; Methylomirabilota; Methylomirabilia; Methylomirabilales; Methylomirabilaceae; Candidatus Methylomirabilis; NA&quot;
+## [35] &quot;Bacteria; Proteobacteria; Gammaproteobacteria; Methylococcales; Methylomonadaceae; pLW-20; NA&quot;</code></pre>
+</div>
 <div id="session-info" class="section level1">
 <h1>Session Info</h1>
 <pre class="r"><code>sessioninfo::session_info()</code></pre>
@@ -1735,7 +1768,7 @@ semi_clean_fapro %&gt;%
 ##  collate  en_US.UTF-8
 ##  ctype    en_US.UTF-8
 ##  tz       America/New_York
-##  date     2025-06-27
+##  date     2025-10-17
 ##  pandoc   3.1.1 @ /usr/lib/rstudio-server/bin/quarto/bin/tools/ (via rmarkdown)
 ## 
 ## ─ Packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
