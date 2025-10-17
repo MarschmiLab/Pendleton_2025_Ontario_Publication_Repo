@@ -1269,3 +1269,106 @@ single_df %>%
 ```
 
 <img src="../figures/12_Ecological_Drivers/plotting-results-conf-1.png" style="display: block; margin: auto;" />
+
+# Randomly looking at Upwelling
+
+
+```r
+full_abs_physeq %>%
+  sample_data %>%
+  data.frame() %>%
+  filter(Comp_Group_Hier_Colors %in% c("Deep (September)", "Shallow_September")) %>%
+  mutate(Comp_Group_Hier_Colors = ifelse(
+    Rep_ID %in% c(
+      "September_38_E",
+      "September_35_E",
+      "September_38_B",
+      "September_35_M",
+      "September_35_B"
+    ),
+    "Sept. Upwelling",
+    Comp_Group_Hier_Colors
+  )) %>%
+  select(
+    Comp_Group_Hier_Colors,
+    NH4:chl_a,
+    temperature,
+    fluorescence,
+    conductivity,
+    salinity,
+    good_oxygen,
+    spar
+  ) %>%
+  pivot_longer(NH4:spar, names_to = "Variable", values_to = "Value") %>%
+  mutate(
+    Comp_Group_Hier_Colors = factor(Comp_Group_Hier_Colors, 
+                                    levels = c("Deep (September)","Sept. Upwelling", "Shallow_September"),
+                                    labels = c("Deep (September)", "Sept. Upwelling", "Shallow September")),
+    Variable = factor(
+    Variable,
+    levels = c(
+      "Na",
+      "K",
+      "Ca",
+      "Mg",
+      "Si",
+      "SO4",
+      "Cl",
+      "DOC",
+      "conductivity",
+      "salinity",
+      "TN",
+      "NOx",
+      "NH4",
+      "TP",
+      "SRP",
+      "temperature",
+      "good_oxygen",
+      "spar",
+      "chl_a",
+      "fluorescence"
+    ),
+    labels = c(
+      "Na (mg/L)",
+      "K (mg/L)",
+      "Ca (mg/L)",
+      "Mg (mg/L)",
+      "Si (mg SiO2/L)",
+      "SO4 (mg/L)",
+      "Cl (mg/L)",
+      "DOC (mg C/L)",
+      "Conductivity (µS/cm)",
+      "Salinity (psu)",
+      "Total Nitrogen (µg N/L)",
+      "NOx (µg N/L)",
+      "NH4 (µg N/L)",
+      "Total Phosphorus (µg P/L)",
+      "SRP (µg P/L)",
+      "Temperature (°C)",
+      "Oxygen (mg/L)",
+      "Spherical PAR (µE/m2s)",
+      "Chlorophyll-a (µg/L)",
+      "Fluorescence (rfu)"
+    )
+  )) %>%
+  ggplot(aes(x = Comp_Group_Hier_Colors, y = Value)) +
+  facet_wrap(~ Variable, scales = "free_y") +
+  ggbeeswarm::geom_beeswarm(alpha = 0.5, cex = 2) +
+  stat_summary(
+    geom = "point",
+    size = 5,
+    alpha = 1,
+    fun = mean,
+    pch = 3
+  ) +
+  stat_summary(
+    geom = "errorbar",
+    width = 0,
+    fun.min = \(x)mean(x) - sd(x),
+    fun.max = \(x)mean(x) + sd(x)
+  ) +
+  labs(x = "", y = "Measure (units in header)") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+<img src="../figures/12_Ecological_Drivers/upwelling-environment-1.png" style="display: block; margin: auto;" />
