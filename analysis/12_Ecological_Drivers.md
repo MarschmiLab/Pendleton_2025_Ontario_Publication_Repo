@@ -1270,13 +1270,15 @@ single_df %>%
 
 <img src="../figures/12_Ecological_Drivers/plotting-results-conf-1.png" style="display: block; margin: auto;" />
 
-# Randomly looking at Upwelling
+# Supplement Figure looking at upwelling environment
+
+Pls don't ask why this figure is made in this place specifically - it's just the document I had open when I was finishing up reviews.
 
 
 ```r
 full_abs_physeq %>%
   sample_data %>%
-  data.frame() %>%
+  data.frame() %>% 
   filter(Comp_Group_Hier_Colors %in% c("Deep (September)", "Shallow_September")) %>%
   mutate(Comp_Group_Hier_Colors = ifelse(
     Rep_ID %in% c(
@@ -1297,9 +1299,9 @@ full_abs_physeq %>%
     conductivity,
     salinity,
     good_oxygen,
-    spar
-  ) %>%
-  pivot_longer(NH4:spar, names_to = "Variable", values_to = "Value") %>%
+    beamTransmission
+  ) %>% 
+  pivot_longer(NH4:beamTransmission, names_to = "Variable", values_to = "Value") %>%
   mutate(
     Comp_Group_Hier_Colors = factor(Comp_Group_Hier_Colors, 
                                     levels = c("Deep (September)","Sept. Upwelling", "Shallow_September"),
@@ -1324,7 +1326,7 @@ full_abs_physeq %>%
       "SRP",
       "temperature",
       "good_oxygen",
-      "spar",
+      "beamTransmission",
       "chl_a",
       "fluorescence"
     ),
@@ -1346,7 +1348,7 @@ full_abs_physeq %>%
       "SRP (µg P/L)",
       "Temperature (°C)",
       "Oxygen (mg/L)",
-      "Spherical PAR (µE/m2s)",
+      "Beam Transmission (%)",
       "Chlorophyll-a (µg/L)",
       "Fluorescence (rfu)"
     )
