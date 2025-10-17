@@ -1,7 +1,7 @@
 ---
 title: "Ecological Drivers (iCAMP)" 
 author: "Augustus Pendleton"
-date: "16 October, 2025"
+date: "17 October, 2025"
 output:
   html_document:
     code_folding: show
@@ -428,13 +428,38 @@ map(bin_results, \(x)x$Pt) %>%
   separate_wider_delim(Settings, delim = "_", names = c("ds", "bsl")) %>%
   pivot_longer(HeS:DR, names_to = "Process",
                values_to = "Importance") %>%
+  mutate(Process = factor(Process, 
+                          levels = c("HoS", "HeS","HD","DL","DR"),
+                          labels = c("Homogenizing\nSelection",
+                                     "Heterogeneous\nSelection",
+                                     "Homogenizing\nDispersal",
+                                     "Dispersal\nLimitation",
+                                     "Drift")),
+         Group = factor(Group,
+                        levels = c("Deep",
+                                   "Shallow_May",
+                                   "Shallow_September",
+                                   "Deep_vs_Shallow_May",
+                                   "Deep_vs_Shallow_September",
+                                   "Shallow_May_vs_Shallow_September"),
+                        labels = c("Deep",
+                                   "Shallow May",
+                                   "Shallow September",
+                                   "Deep vs\nShallow May",
+                                   "Deep vs\nShallow September",
+                                   "Shallow May vs\nShallow September")))%>%
   ggplot(aes(x = ds, y = as.numeric(Importance), color = bsl)) + 
-  facet_grid(Group ~ Process) + 
+  facet_grid(Process ~ Group) + 
   geom_point() + 
-  coord_cartesian(ylim = c(0,1))
+  geom_hline(yintercept = -Inf) + 
+  geom_vline(xintercept = -Inf) + 
+  scale_y_continuous(limits = c(0,1), breaks = c(0,0.5,1))+
+  scale_x_discrete(labels = c("0.1", "0.3", "0.5")) + 
+  labs(x = "ds", color = "bin.size.limit", y = "% Importance") + 
+  theme(axis.line = element_blank())
 ```
 
-<img src="../figures/12_Ecological_Drivers/unnamed-chunk-1-1.png" style="display: block; margin: auto;" />
+<img src="../figures/12_Ecological_Drivers/process-across-parameters-1.png" style="display: block; margin: auto;" />
 
 # Full-official one
 
@@ -526,7 +551,7 @@ list(three_groups = icamp_bin_ds5_bsl24$Pt,
   facet_wrap(~name)
 ```
 
-<img src="../figures/12_Ecological_Drivers/unnamed-chunk-2-1.png" style="display: block; margin: auto;" />
+<img src="../figures/12_Ecological_Drivers/unnamed-chunk-1-1.png" style="display: block; margin: auto;" />
 
 ```r
 list(three_groups = icamp_bin_ds5_bsl24$Pt,
@@ -540,7 +565,7 @@ list(three_groups = icamp_bin_ds5_bsl24$Pt,
   coord_cartesian(xlim = c(0,1))
 ```
 
-<img src="../figures/12_Ecological_Drivers/unnamed-chunk-2-2.png" style="display: block; margin: auto;" />
+<img src="../figures/12_Ecological_Drivers/unnamed-chunk-1-2.png" style="display: block; margin: auto;" />
 
 Okay, these results have convinced me. There is enough difference between the Deep (May) results and the Deep (September) results for me to want to show them separately. It doesn't really change the comparisons between the Deep and Shallow, but I understand the reviewer's comments. I'm going to remake the tree diagram to have one more major row (bummer, but I think it's good work to do!). Homogenizing dispersal and HeS are still not relevant so I won't worry about them.
 

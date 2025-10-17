@@ -411,7 +411,7 @@ save(icamp_results_ds5_bsl48, file = "data/12_ecological_drivers/output_ds5_bsl4
 
 # Examining over-all differences
 
-```{r}
+```{r process-across-parameters, fig.width = 10, fig.height = 8}
 
 load("data/12_ecological_drivers/output_ds1_bsl24.RData")
 load("data/12_ecological_drivers/output_ds3_bsl24.RData")
@@ -450,10 +450,35 @@ map(bin_results, \(x)x$Pt) %>%
   separate_wider_delim(Settings, delim = "_", names = c("ds", "bsl")) %>%
   pivot_longer(HeS:DR, names_to = "Process",
                values_to = "Importance") %>%
+  mutate(Process = factor(Process, 
+                          levels = c("HoS", "HeS","HD","DL","DR"),
+                          labels = c("Homogenizing\nSelection",
+                                     "Heterogeneous\nSelection",
+                                     "Homogenizing\nDispersal",
+                                     "Dispersal\nLimitation",
+                                     "Drift")),
+         Group = factor(Group,
+                        levels = c("Deep",
+                                   "Shallow_May",
+                                   "Shallow_September",
+                                   "Deep_vs_Shallow_May",
+                                   "Deep_vs_Shallow_September",
+                                   "Shallow_May_vs_Shallow_September"),
+                        labels = c("Deep",
+                                   "Shallow May",
+                                   "Shallow September",
+                                   "Deep vs\nShallow May",
+                                   "Deep vs\nShallow September",
+                                   "Shallow May vs\nShallow September")))%>%
   ggplot(aes(x = ds, y = as.numeric(Importance), color = bsl)) + 
-  facet_grid(Group ~ Process) + 
+  facet_grid(Process ~ Group) + 
   geom_point() + 
-  coord_cartesian(ylim = c(0,1))
+  geom_hline(yintercept = -Inf) + 
+  geom_vline(xintercept = -Inf) + 
+  scale_y_continuous(limits = c(0,1), breaks = c(0,0.5,1))+
+  scale_x_discrete(labels = c("0.1", "0.3", "0.5")) + 
+  labs(x = "ds", color = "bin.size.limit", y = "% Importance") + 
+  theme(axis.line = element_blank())
 
 
 ```
@@ -755,7 +780,7 @@ bin_summarized_abunds <- bin_sample_abunds %>%
 ```
 
 
-```{r FIGURE-3C, fig.width = 3.5, fig.height = 3.5}
+```{r FIGURE-3C, fig.width = 5, fig.height = 3.5}
 bin_summarized_abunds %>%
   left_join(all_bin_process) %>%
   filter(DominantProcess %in% c("DL", "DR/DL","DR","HoS")) %>%
