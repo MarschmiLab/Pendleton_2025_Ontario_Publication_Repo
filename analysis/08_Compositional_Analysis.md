@@ -1,7 +1,7 @@
 ---
 title: "Compositional Analysis" 
 author: "Augustus Pendleton"
-date: "17 October, 2025"
+date: "11 November, 2025"
 output:
   html_document:
     code_folding: show
@@ -685,7 +685,7 @@ env_pca <- ggplot(data = point_df, aes(x=x, y=y, color = Comp_Group_Hier_Colors)
                      breaks = c("Upwelling", "Downwelling","Welland Canal")) + 
   scale_fill_manual(values = comp_group_colors_hier, guide = "none") +
   scale_color_manual(values = comp_group_colors_hier) +
-  theme(legend.justification.inside = c(1,0.01),
+  theme(legend.justification.inside = c(1,-0.02),
         legend.position = "inside",
         legend.spacing = unit(0, "cm"),
         legend.box.background = element_blank())
@@ -1129,7 +1129,7 @@ sessioninfo::session_info()
 ##  collate  en_US.UTF-8
 ##  ctype    en_US.UTF-8
 ##  tz       America/New_York
-##  date     2025-10-17
+##  date     2025-11-11
 ##  pandoc   3.1.1 @ /usr/lib/rstudio-server/bin/quarto/bin/tools/ (via rmarkdown)
 ## 
 ## ─ Packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

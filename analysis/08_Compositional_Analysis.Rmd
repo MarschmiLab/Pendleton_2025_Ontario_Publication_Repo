@@ -588,7 +588,7 @@ env_pca <- ggplot(data = point_df, aes(x=x, y=y, color = Comp_Group_Hier_Colors)
                      breaks = c("Upwelling", "Downwelling","Welland Canal")) + 
   scale_fill_manual(values = comp_group_colors_hier, guide = "none") +
   scale_color_manual(values = comp_group_colors_hier) +
-  theme(legend.justification.inside = c(1,0.01),
+  theme(legend.justification.inside = c(1,-0.02),
         legend.position = "inside",
         legend.spacing = unit(0, "cm"),
         legend.box.background = element_blank())
